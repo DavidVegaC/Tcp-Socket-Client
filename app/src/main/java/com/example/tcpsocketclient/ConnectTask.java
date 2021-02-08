@@ -42,6 +42,7 @@ public class ConnectTask {
     String tramaPrueba;
     byte[] tramaPruebaByte;
 
+    //davidd
     Handler bluetoothIn;
     Thread thread;
     Handler handler = new Handler();
