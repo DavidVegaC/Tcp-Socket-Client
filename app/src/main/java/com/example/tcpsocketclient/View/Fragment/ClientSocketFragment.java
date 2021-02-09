@@ -1,28 +1,43 @@
-package com.example.tcpsocketclient;
-
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
+package com.example.tcpsocketclient.View.Fragment;
 
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import com.example.tcpsocketclient.R;
+import com.example.tcpsocketclient.TcpClient;
+import com.example.tcpsocketclient.View.Activity.MainActivity;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.IOException;
+
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link ClientSocketFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class ClientSocketFragment extends Fragment {
+
+    // TODO: Rename parameter arguments, choose names that match
+    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
+
+    // TODO: Rename and change types of parameters
+    private String mParam1;
+    private String mParam2;
+
+    private ViewGroup rootView;
 
     private EditText ed1,edIP, edPort;
     private Button bt1, bt2,bt3;
@@ -34,24 +49,46 @@ public class MainActivity extends AppCompatActivity {
     private String strDireccionIP = "";
     private int intPORT = 0;
 
+    public ClientSocketFragment() {
+        // Required empty public constructor
+    }
 
-    public static final String SERVER_IP = "192.168.1.15"; //server IP address
-    public static final int SERVER_PORT = 2230;
-
-    //private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    public static ClientSocketFragment newInstance(String param1, String param2) {
+        ClientSocketFragment fragment = new ClientSocketFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ed1= (EditText)findViewById(R.id.ed1);
-        edIP= (EditText)findViewById(R.id.edIP);
-        edPort= (EditText)findViewById(R.id.edPort);
+        if (getArguments() != null) {
+            mParam1 = getArguments().getString(ARG_PARAM1);
+            mParam2 = getArguments().getString(ARG_PARAM2);
+        }
+    }
 
-        bt1 = (Button)findViewById(R.id.SendButton);
-        bt2 = (Button)findViewById(R.id.CloseButton);
-        bt3 = (Button)findViewById(R.id.ConnectedButton);
-        tv1 = (TextView) findViewById(R.id.textView2);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        rootView = (ViewGroup)inflater.inflate(R.layout.fragment_client_socket,container,false);
+        initComponent();
+        return rootView;
+    }
+
+    private void initComponent(){
+        ed1= (EditText)rootView.findViewById(R.id.ed1);
+        edIP= (EditText)rootView.findViewById(R.id.edIP);
+        edPort= (EditText)rootView.findViewById(R.id.edPort);
+
+        bt1 = (Button)rootView.findViewById(R.id.SendButton);
+        bt2 = (Button)rootView.findViewById(R.id.CloseButton);
+        bt3 = (Button)rootView.findViewById(R.id.ConnectedButton);
+        tv1 = (TextView) rootView.findViewById(R.id.textView2);
         tv1.setMovementMethod(new ScrollingMovementMethod());
         bt2.setEnabled(false);
         //new ConnectTask().execute("");
@@ -89,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 //closeTCP();
                 //Toast.makeText(MainActivity.this, "pasooo2222", Toast.LENGTH_SHORT).show();
                 if(edIP.getText().toString().trim().equals("") || edPort.getText().toString().trim().equals("")){
-                    Toast.makeText(MainActivity.this, "Debe completar tanto la DirecciónIP como el Puerto.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(rootView.getContext(), "Debe completar tanto la DirecciónIP como el Puerto.", Toast.LENGTH_SHORT).show();
                 }else{
                     strDireccionIP =edIP.getText().toString().trim();
                     intPORT =Integer.parseInt(edPort.getText().toString().trim());
@@ -99,9 +136,6 @@ public class MainActivity extends AppCompatActivity {
                     edIP.setEnabled(false);
                     edPort.setEnabled(false);
                 }
-
-
-
             }
         });
     }
@@ -131,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                         mensaje = " " +message;
                     }
 
-                    runOnUiThread(new Runnable() {
+                    getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             // Stuff that updates the UI
@@ -140,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                             if(conexion){
                                 tv1.append(mensaje);
                             }else{
-                                Toast.makeText(MainActivity.this,mensajeError , Toast.LENGTH_SHORT).show();
+                                Toast.makeText(rootView.getContext(),mensajeError , Toast.LENGTH_SHORT).show();
                                 closeConecction();
                                 edIP.setEnabled(true);
                                 edPort.setEnabled(true);
@@ -173,20 +207,24 @@ public class MainActivity extends AppCompatActivity {
             if(!message.equals("")){
                 mTcpClient.sendMessage(message);
             }else{
-                Toast.makeText(this, "El mensaje está vacio.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(rootView.getContext(), "El mensaje está vacio.", Toast.LENGTH_SHORT).show();
             }
         }else{
-            Toast.makeText(this, "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(rootView.getContext(), "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
         }
 
     }
 
     public void closeConecction(){
         if (mTcpClient != null) {
-            mTcpClient.stopClient();
+            try {
+                mTcpClient.stopClient();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             mTcpClient= null;
         }else{
-            Toast.makeText(this, "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(rootView.getContext(), "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
         }
     }
 
