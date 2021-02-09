@@ -7,6 +7,7 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,7 +36,9 @@ public class TcpClient {
     // while this is true, the server will continue running
     private boolean mRun = false;
     // used to send messages
-    private PrintWriter mBufferOut;
+    //private PrintWriter mBufferOut;
+    private DataOutputStream mBufferOut=null;
+
     // used to read messages from the server
     private InputStream mBufferIn;
     //private DataInputStream mBufferIn;
@@ -44,6 +47,11 @@ public class TcpClient {
     //private tamaño trama final
     private final int tamanoTramaPrueba=11;
 
+    //Datos usados para la recepción
+    private int indByte=0;
+    private int longitudTemp=0;
+    int longitudTramaRecepcion = 0;
+    private int[] bufferRecepcion = new int[300];
 
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages received from server
@@ -65,8 +73,14 @@ public class TcpClient {
             public void run() {
                 if (mBufferOut != null) {
                     Log.d(TAG, "Sending: " + message);
-                    mBufferOut.print(message);
-                    mBufferOut.flush();
+                    try {
+                        mBufferOut.writeUTF(message);
+                        mBufferOut.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    //mBufferOut.flush();
                 }
             }
         };
@@ -77,7 +91,7 @@ public class TcpClient {
     /**
      * Close the connection and release the members
      */
-    public void stopClient() {
+    public void stopClient() throws IOException {
 
         mRun = false;
 
@@ -110,8 +124,10 @@ public class TcpClient {
                 int bytes;
                 //sends the message to the server
                 //mBufferOut = new PrintStream(socket.getOutputStream(), true);
-                mBufferOut = new PrintWriter(socket.getOutputStream());
-                //receives the message which the server sends back
+                //mBufferOut = new PrintWriter(socket.getOutputStream());
+                mBufferOut = new DataOutputStream(
+                        socket.getOutputStream());
+                        //receives the message which the server sends back
                 mBufferIn = socket.getInputStream();
 
                 //byte[] buffer = new byte[256];
@@ -133,7 +149,7 @@ public class TcpClient {
                         bytes=0;
                         //mBufferIn.read(lenBytes, 0, 10);
                         bytes=mBufferIn.read(bufferTemporal);
-                        String readMessage = new String(bufferTemporal, 0, bytes);
+                        /*String readMessage = new String(bufferTemporal, 0, bytes);
                         Log.v("buffer", "" + readMessage);
                         // Send the obtained bytes to the UI Activity via handler
                         mensaje=byteArrayToHexString(bufferTemporal,bytes);
@@ -153,7 +169,10 @@ public class TcpClient {
                                 mostrarTextView=mostrarTextView.substring(tamanoTramaPrueba*4);
                             }
 
-                        }
+                        }*/
+
+                        recepciontTwoEasyFuel(bufferTemporal,bytes);
+
 
                         //mMessageListener.messageReceived(mensaje);
                         /*if (bytes == 11 && mMessageListener != null ) {
@@ -211,11 +230,99 @@ public class TcpClient {
         public void messageReceived(String message);
     }
 
+    private boolean recepciontTwoEasyFuel(byte[] temporal, int cantidad){
+        //Log.v("", "" + byteArrayToHexString(temporal,cantidad));
+        boolean hasPacket=false;
+        int datoTemporal;
+        int i;
+
+        if(cantidad>0) {
+            for(i=0;i<cantidad;i++){
+                datoTemporal=0xFF&temporal[i];
+
+                if(indByte==0){
+                    if(datoTemporal==0x02){
+                        bufferRecepcion[indByte]=datoTemporal;
+                        indByte++;
+                    }
+                    else{
+                        longitudTemp=0;
+                        indByte=0;
+                    }
+                }
+                else{
+                    if(indByte==1 || indByte==2){
+                        if(indByte==1){
+                            longitudTemp = datoTemporal;
+                            bufferRecepcion[indByte]=datoTemporal;
+                            indByte++;
+                        }
+                        else{
+                            if(indByte==2){
+                                longitudTemp = (longitudTemp)|(((short)datoTemporal)<<8);
+                                //GUARDAR LONGITUD
+                                longitudTramaRecepcion = longitudTemp;
+                                Log.v("", "" + "Longitud   " + longitudTramaRecepcion);
+                                bufferRecepcion[indByte] = datoTemporal;
+                                indByte++;
+                                if((longitudTemp>500)||(longitudTemp<8)){
+                                    longitudTemp = 0;
+                                    indByte = 0;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if(indByte>2){
+                            bufferRecepcion[indByte] = datoTemporal;
+                            indByte++;
+                            if(indByte==longitudTemp){
+                                if(datoTemporal==0x03){
+                                    hasPacket=true;
+                                    Log.v("", "" + "Recepcion   " + byteArrayToHexString(bufferRecepcion,longitudTemp));
+                                    mMessageListener.messageReceived(byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n");
+                                    //mConnectedThread.write(EmbeddedPtcl.b_ext_configuracion);
+                                    //showText(""+ byteArrayToHexString(bufferRecepcion,longitudTemp));
+                                    indByte=0;
+                                    longitudTemp=0;
+                                }
+                                else{
+                                    indByte=0;
+                                    longitudTemp=0;
+                                    bufferRecepcion = new int[300];
+                                    //ALERTAR QUE LA TRAMA ES INVÁLIDA
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        else{
+            //NO SE RECIBIERON DATOS
+            Log.v("recepcionEasyFuel", "NO SE RECIBIERON DATOS");
+        }
+
+        return hasPacket;
+    }
+
+
     private String byteArrayToHexString(final byte[] bytes, int cantidad) {
         StringBuilder sb = new StringBuilder();
         //for(byte b : bytes){
         for(int i = 0; i<cantidad; i++){
             sb.append(String.format("[%02x]", bytes[i]&0xFF));
+            //sb.append((char)(0xFF&bytes[i]));
+        }
+        return sb.toString();
+    }
+
+    private static String byteArrayToHexString(final int[] bytes, int cantidad) {
+        StringBuilder sb = new StringBuilder();
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            sb.append(String.format("%02x", bytes[i]&0xff));
             //sb.append((char)(0xFF&bytes[i]));
         }
         return sb.toString();
