@@ -14,6 +14,7 @@ import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
+import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -30,6 +31,8 @@ import com.example.tcpsocketclient.TcpClient;
 import com.example.tcpsocketclient.View.Activity.MainActivity;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -67,6 +70,8 @@ public class ClientSocketFragment extends Fragment {
     private String strDireccionIP = "";
     private int intPORT = 0;
     private WifiManager wifi;
+
+    private final String nombreRedSocket = "AndroidAPCC28";
 
     public ClientSocketFragment() {
         // Required empty public constructor
@@ -241,18 +246,16 @@ public class ClientSocketFragment extends Fragment {
 
     public void setWIFIActive(){
         wifi = (WifiManager) rootView.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo connectionInfo = wifi.getConnectionInfo();
+
         boolean estadoWifi = wifi.isWifiEnabled();
 
         if (estadoWifi) {
-            //String redSSID = ;
+            WifiInfo connectionInfo = wifi.getConnectionInfo();
 
-            int ipAddress = connectionInfo.getIpAddress();
-            String holaaa = connectionInfo.toString();
+            //int ipAddress = connectionInfo.getIpAddress();
+            //String ipString = Formatter.formatIpAddress(ipAddress);
 
-            String ipString = Formatter.formatIpAddress(ipAddress);
-
-            if (connectionInfo.getSSID().equals("\"EMBEDDED DEMO\"")) {
+            if (connectionInfo.getSSID().equals("\""+nombreRedSocket+"\"")) {
 
                         /*WifiConfiguration conf = new WifiConfiguration();
                         conf.SSID = redSSID;
@@ -284,34 +287,46 @@ public class ClientSocketFragment extends Fragment {
                                 break;
                             }
                         }*/
-                Toast.makeText(rootView.getContext(), "Conectado a red WIFI EMBEDDED DEMO.IP="+ipString,
-                        Toast.LENGTH_LONG).show();
-                Log.d("davidddd","hola -" + wifi.isWifiEnabled() + " - " + connectionInfo.getSSID());
+                //Toast.makeText(rootView.getContext(), "Conectado a red WIFI "+nombreRedSocket+".",Toast.LENGTH_LONG).show();
+                //Log.d("davidddd","hola -" + wifi.isWifiEnabled() + " - " + connectionInfo.getSSID());
 
-                /*if(edIP.getText().toString().trim().equals("") || edPort.getText().toString().trim().equals("")){
-                    Toast.makeText(rootView.getContext(), "Debe completar tanto la DirecciónIP como el Puerto.", Toast.LENGTH_SHORT).show();
+
+                //cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, "android.net.conn.CONNECTIVITY_CHANGE");
+                //ºcm.set
+
+                if(isOuputdWifi(rootView.getContext())){
+                    connectSocket();
                 }else{
-                    strDireccionIP =edIP.getText().toString().trim();
-                    intPORT =Integer.parseInt(edPort.getText().toString().trim());
-                    new ConnectTask().execute("");
-                    bt3.setEnabled(false);
-                    bt2.setEnabled(true);
-                    edIP.setEnabled(false);
-                    edPort.setEnabled(false);
-                }*/
+                    Toast.makeText(rootView.getContext(), "Debe desactivar sus datos móviles.",Toast.LENGTH_LONG).show();
+                }
 
 
             }else{
-                Toast.makeText(rootView.getContext(), "Red Desconocida. Debe conectarse a la red EMBEDDED DEMO. IP:"+ipString,
+                Toast.makeText(rootView.getContext(), "No se detectó conexión a la red "+nombreRedSocket+".",
                         Toast.LENGTH_LONG).show();
             }
         }else{
-            Toast.makeText(rootView.getContext(), "No existe conectividad a WIFI",
+            Toast.makeText(rootView.getContext(), "Activar WIFI y conectarse a la red "+nombreRedSocket+".",
                     Toast.LENGTH_LONG).show();
         }
 
-        isConnectedWifi(rootView.getContext());
+
     }
+
+    public void connectSocket(){
+        if(edIP.getText().toString().trim().equals("") || edPort.getText().toString().trim().equals("")){
+            Toast.makeText(rootView.getContext(), "Debe completar tanto la DirecciónIP como el Puerto.", Toast.LENGTH_SHORT).show();
+        }else{
+            strDireccionIP =edIP.getText().toString().trim();
+            intPORT =Integer.parseInt(edPort.getText().toString().trim());
+            new ConnectTask().execute("");
+            bt3.setEnabled(false);
+            bt2.setEnabled(true);
+            edIP.setEnabled(false);
+            edPort.setEnabled(false);
+        }
+    }
+
 
     public void sendMessage(){
         String message = ed1.getText().toString().trim();
@@ -341,33 +356,28 @@ public class ClientSocketFragment extends Fragment {
         }
     }
 
-    public void isConnectedWifi(Context context) {
-
+    public boolean isOuputdWifi(Context context) {
+        boolean retorno=false;
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         connectivityManager.setNetworkPreference(ConnectivityManager.TYPE_WIFI);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         //Log.d("daviddd",networkInfo.getExtraInfo());
         if (networkInfo != null && networkInfo.isConnected()) {
-            Log.d("MIAPP", "Estás online");
-
-            Log.d("MIAPP", " Estado actual: " + networkInfo.getState());
 
             if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 // Estas conectado a un Wi-Fi
                 Log.d("MIAPP", " Nombre red Wi-Fi: " + networkInfo.getReason());
-                Toast.makeText(rootView.getContext(), "Existe conectividad a WIFI",
-                        Toast.LENGTH_LONG).show();
-            }else{
-                Toast.makeText(rootView.getContext(), "Existe conectividad con datos moviles.",
-                        Toast.LENGTH_LONG).show();
+                //Toast.makeText(rootView.getContext(), "Existe conectividad a WIFI", Toast.LENGTH_LONG).show();
+                retorno=true;
             }
 
         } else {
             Log.d("MIAPP", "Estás offline");
-            Toast.makeText(rootView.getContext(), "No existe conectividad a WIFI",
+            Toast.makeText(rootView.getContext(), "No existe conectividad a Internet",
                     Toast.LENGTH_LONG).show();
         }
 
+        return retorno;
     }
 
     public void getLocalIpAddress() {
@@ -386,6 +396,5 @@ public class ClientSocketFragment extends Fragment {
             Log.e("iperror:", ex.toString());
         }
     }
-
 
 }
