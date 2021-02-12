@@ -4,6 +4,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.tcpsocketclient.Entities.TransactionEntity;
+import com.example.tcpsocketclient.Util.Wifi.EmbeddedPtcl;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -19,6 +22,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 public class TcpClient {
@@ -28,6 +35,7 @@ public class TcpClient {
     //public static final int SERVER_PORT = 2230;
     public static  String SERVER_IP = "192.168.1.1";
     public static  int SERVER_PORT = 2234;
+    public static String LOCAL_PORT = "";
     // message to send to the server
     private String mServerMessage;
     public String msgError = "";
@@ -35,17 +43,16 @@ public class TcpClient {
     private OnMessageReceived mMessageListener = null;
     // while this is true, the server will continue running
     private boolean mRun = false;
+    //declare socket
+    Socket socket=null;
     // used to send messages
-    //private PrintWriter mBufferOut;
-    private DataOutputStream mBufferOut=null;
+    private OutputStream mBufferOut;
+    //private DataOutputStream mBufferOut=null;
 
     // used to read messages from the server
     private InputStream mBufferIn;
     //private DataInputStream mBufferIn;
     private byte[] bufferTemporal = new byte[300];
-
-    //private tamaño trama final
-    private final int tamanoTramaPrueba=11;
 
     //Datos usados para la recepción
     private int indByte=0;
@@ -53,13 +60,21 @@ public class TcpClient {
     int longitudTramaRecepcion = 0;
     private int[] bufferRecepcion = new int[300];
 
+    byte[] bufferTransmision= new byte[300];
+    List<TransactionEntity> hoseEntities = new ArrayList<>();
+    int numBombas=0;
+
+
+    //string hexString = "028c000106010000454d42454444454400000000000000005465038b7aa8313233343536373839000004010203040101024739302d312020202020473930202020202020200201024739302d322020202020473930202020202020200301024739302d312020202020473930202020202020200401024739302d31202020202047393020202020202020db03";
+
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages received from server
      */
-    public TcpClient(OnMessageReceived listener, String DirIP, int puerto) {
+    public TcpClient(OnMessageReceived listener, String DirIP, int puerto, String LocalIP) {
         SERVER_IP=DirIP;
         SERVER_PORT=puerto;
         mMessageListener = listener;
+        LOCAL_PORT=LocalIP;
     }
 
     /**
@@ -74,10 +89,10 @@ public class TcpClient {
                 if (mBufferOut != null) {
                     Log.d(TAG, "Sending: " + message);
                     try {
-                        mBufferOut.writeUTF(message);
+                        mBufferOut.write(1);
                         mBufferOut.flush();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                       Log.e("Error Salida",e.getMessage(),e);
                     }
 
                     //mBufferOut.flush();
@@ -115,34 +130,29 @@ public class TcpClient {
 
             Log.d("TCP Client", "C: Connecting...");
 
+            InetAddress localAddr = InetAddress.getByName(LOCAL_PORT);
             //create a socket to make the connection with the server
-            Socket socket = new Socket(serverAddr, SERVER_PORT);
+
+            socket = new Socket(serverAddr, SERVER_PORT, localAddr, 0);
             //socket.setSoTimeout(200);
 
             Log.d("TCP Client", "C: Connectado..");
             try {
                 int bytes;
                 //sends the message to the server
-                //mBufferOut = new PrintStream(socket.getOutputStream(), true);
-                //mBufferOut = new PrintWriter(socket.getOutputStream());
-                mBufferOut = new DataOutputStream(
-                        socket.getOutputStream());
-                        //receives the message which the server sends back
+                mBufferOut = socket.getOutputStream();
+
+                //receives the message which the server sends back
                 mBufferIn = socket.getInputStream();
 
-                //byte[] buffer = new byte[256];
+
+
                 //in this while the client listens for the messages sent by the server
                 int tamBytes=0;
-                String mensaje="";
-                String mostrarTextView="";
                 while (mRun) {
                     //mBufferIn = new DataInputStream(socket.getInputStream());
                     /*mServerMessage = mBufferIn.readLine();
 
-                    if (mServerMessage != null && mMessageListener != null) {
-                        //call the method messageReceived from MyActivity class
-                        mMessageListener.messageReceived(mServerMessage);
-                    }
                     Log.d("RESPONSE FROM SERVER", "S: Received Message: '" + mServerMessage + "'");*/
                     bufferTemporal = new byte[300];
                     if(!socket.isClosed()) {
@@ -153,44 +163,13 @@ public class TcpClient {
                         Log.v("buffer", "" + readMessage);
                         // Send the obtained bytes to the UI Activity via handler
                         mensaje=byteArrayToHexString(bufferTemporal,bytes);
-                        mostrarTextView+=mensaje;
                         Log.v("", "" + mensaje);
-                        tamBytes+=bytes;
-
-                        if(tamBytes==tamanoTramaPrueba){
-                            mMessageListener.messageReceived(mostrarTextView+ "\n");
-                            tamBytes=0;
-                            mostrarTextView="";
-                        }else if (tamBytes>tamanoTramaPrueba){
-                            int contiene=tamBytes/tamanoTramaPrueba;
-                            tamBytes=tamBytes%tamanoTramaPrueba;
-                            for(int i=0;i<contiene;i++){
-                                mMessageListener.messageReceived(mostrarTextView.substring(0,tamanoTramaPrueba*4)+"\n");
-                                mostrarTextView=mostrarTextView.substring(tamanoTramaPrueba*4);
-                            }
-
-                        }*/
+                        */
 
                         recepciontTwoEasyFuel(bufferTemporal,bytes);
 
 
                         //mMessageListener.messageReceived(mensaje);
-                        /*if (bytes == 11 && mMessageListener != null ) {
-                            //String received = new String(buffer, 0, bytes);
-                            //received += " - "+bytes+" - ";
-                            //for(int i=0;i<10;i++){
-                            //    int positive = lenBytes[i] & 0xff;
-                            //    received += "["+positive+"] ";
-                            //}
-                            //received +=byteArrayToHex(lenBytes);
-                            String received = "";
-                            received += byteArrayToHexString(bufferTemporal,bytes) + "\n";
-                            mMessageListener.messageReceived(received);
-                            Log.d("RESPONSE FROM SERVER", "S: Received Message: '" + received + "'");
-                        }else if(bytes  >= 0){
-                            mMessageListener.messageReceived("Error al recibir bytes "+ bytes + "  "+byteArrayToHex(bufferTemporal,bytes)+"\n");
-                            //Log.d("RESPONSE FROM SERVER", "S: Received Message: '" + received + "'");
-                        }*/
 
                     }
 
@@ -198,11 +177,10 @@ public class TcpClient {
             }  catch (IOException e) {
                 //e.printStackTrace();
                 //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
-                msgError ="Se perdió la conexion con el socket del servidor";
+                msgError ="Se perdió la conexión con el socket del servidor";
                 mMessageListener.messageReceived(null);
             }catch (Exception e) {
                 Log.e("TCP", "S: Error", e);
-
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
@@ -224,13 +202,37 @@ public class TcpClient {
 
     }
 
+
+    public void write(int opcode) {
+        bufferTransmision = new byte[300];
+        int longitud=0;
+        switch(opcode){
+
+            //TRAMA DE CONFIGURACION
+            case EmbeddedPtcl.b_ext_configuracion:
+                longitud = EmbeddedPtcl.aceptarTramaConfiguracion(bufferTransmision, bufferRecepcion[3],bufferRecepcion[4],bufferRecepcion[5]);
+                Log.v("", "" + "Transmision   "+ byteArrayToHexString(bufferTransmision,0x0b));
+                break;
+
+        }
+
+        try {
+            mBufferOut.write(bufferTransmision,0,longitud);
+            //timerNoComunicacion(1500);
+        } catch (IOException e) {
+            //if you cannot write, close the application
+            Log.e("WriteSOcket",e.getMessage(),e);
+
+        }
+    }
+
     //Declare the interface. The method messageReceived(String message) will must be implemented in the Activity
     //class at on AsyncTask doInBackground
     public interface OnMessageReceived {
         public void messageReceived(String message);
     }
 
-    private boolean recepciontTwoEasyFuel(byte[] temporal, int cantidad){
+    private void recepciontTwoEasyFuel(byte[] temporal, int cantidad)  {
         //Log.v("", "" + byteArrayToHexString(temporal,cantidad));
         boolean hasPacket=false;
         int datoTemporal;
@@ -280,9 +282,14 @@ public class TcpClient {
                                 if(datoTemporal==0x03){
                                     hasPacket=true;
                                     Log.v("", "" + "Recepcion   " + byteArrayToHexString(bufferRecepcion,longitudTemp));
-                                    mMessageListener.messageReceived(byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n");
+
+                                    //write(bufferRecepcion[4]);
+                                    procesarTramaEasyFuel();
+                                    String mostrar = armarMensajeMuestra();
+                                    mMessageListener.messageReceived("\n"+byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n" +mostrar);
                                     //mConnectedThread.write(EmbeddedPtcl.b_ext_configuracion);
                                     //showText(""+ byteArrayToHexString(bufferRecepcion,longitudTemp));
+
                                     indByte=0;
                                     longitudTemp=0;
                                 }
@@ -304,7 +311,155 @@ public class TcpClient {
             Log.v("recepcionEasyFuel", "NO SE RECIBIERON DATOS");
         }
 
-        return hasPacket;
+        //return hasPacket;
+    }
+
+    public void procesarTramaEasyFuel(){
+        switch (bufferRecepcion[4]){
+            //TRAMA DE CONFIGURACION
+            case 0x06:
+                if(bufferRecepcion[5] == 0x01 || bufferRecepcion[5] == 0x02){
+                    //TRAMA DE CONFIGURACION
+                    //Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(bufferRecepcion,bufferRecepcion.length)));
+                    //Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
+                    //Log.v("TRAMA EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACEmbedded,tramaMACEmbedded.length)));
+                    //Log.v("PING HOST EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaPingHost,tramaPingHost.length)));
+                    //Log.v("NÚMERO DE BOMBAS", "" + byteArrayToHexInt(numeroBombas,1));
+
+                    llenarDatosConfiguracion();
+
+                    write(EmbeddedPtcl.b_ext_configuracion); //0x06
+                }
+                break;
+
+            //CAMBIO DE ESTADO
+            case 0x01:
+
+                break;
+
+            case 0x07:
+                switch(bufferRecepcion[5]){
+                    case 0x01:
+                        break;
+                }
+                break;
+        }
+    }
+
+    public void llenarDatosConfiguracion(){
+
+        hoseEntities = new ArrayList<>();
+        //**********************************************************
+
+        //Capturar Nombre Host WIFI
+        int[] tramaNombreEmbedded = new int[16];
+        int c = 0;
+        for(int i = 8; i<= 23;  i++){
+            tramaNombreEmbedded[c] = bufferRecepcion[i];
+            c++;
+        }
+
+        Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
+        //**********************************************************
+        //Capturar MAC TABLET
+        int[] tramaMACTablet= new int[6];
+        c = 0;
+        for(int i = 24; i<= 29;  i++){
+            tramaMACTablet[c] = bufferRecepcion[i];
+            c++;
+        }
+        Log.v("MAC TABLET EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACTablet,tramaMACTablet.length)));
+
+
+        //**********************************************************
+        //Capturar Contraseña Red Host
+        int[] contrasenaHostEmbedded = new int[11];
+        c = 0;
+        for(int i = 30; i<= 40;  i++){
+            contrasenaHostEmbedded[c] = bufferRecepcion[i];
+            c++;
+        }
+
+        Log.v("CONTRASENA RED EMBEDDED", "" + hexToAscii(byteArrayToHexString(contrasenaHostEmbedded,contrasenaHostEmbedded.length)));
+
+
+        //**********************************************************
+        //Capturar Nro Bombas
+        int[] numeroBombas = new int[1];
+        numeroBombas[0] = bufferRecepcion[41];
+        numBombas = Integer.parseInt(byteArrayToHexIntGeneral(numeroBombas,1));
+        //**********************************************************
+        //int pIinicial = 42;
+
+        //obtener solo IDbombas
+        int[] idBombas = new int[numBombas];
+
+        int pIinicial = 42;
+        for(int i = 0; i< numBombas;  i++){
+            idBombas[i] = bufferRecepcion[pIinicial];
+            pIinicial+=1;
+        }
+
+        for(int i = 0; i< numBombas; i++){
+            TransactionEntity transactionEntity = new TransactionEntity();
+            transactionEntity.setEstadoRegistro("P");
+            //**********************************************************
+            //Capturar idBomba
+            int[] idBomba = new int[1];
+            idBomba[0] = bufferRecepcion[pIinicial];
+            transactionEntity.setIdBomba(Integer.parseInt((byteArrayToHexIntGeneral(idBomba,1))));
+            //**********************************************************
+            //Capturar idProducto
+            int[] idProducto = new int[1];
+            idProducto[0] = bufferRecepcion[pIinicial + 1];
+            transactionEntity.setIdProducto(Integer.parseInt(byteArrayToHexIntGeneral(idProducto,1)));
+            //**********************************************************
+            //Capturar cantidadDecimales
+            int[] cantidadDecimales = new int[1];
+            cantidadDecimales[0] = bufferRecepcion[pIinicial + 2];
+            transactionEntity.setCantidadDecimales(Integer.parseInt(byteArrayToHexIntGeneral(cantidadDecimales,1)));
+            //**********************************************************
+            //Capturar cantidadDecimales
+            int[] nombreManguera = new int[10];
+            int contadorMangueraInicial = pIinicial + 3;
+            int contadorMangueraFinal = contadorMangueraInicial + 9;
+            int contadorIteracionesManguera = 0;
+            for(int j=contadorMangueraInicial; j<=contadorMangueraFinal; j++){
+                nombreManguera[contadorIteracionesManguera] = bufferRecepcion[j];
+                contadorIteracionesManguera ++;
+            }
+            transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
+
+            int[] nombreProducto = new int[10];
+            int contadorProductoInicial = pIinicial + 13;
+            int contadorProductoFinal = contadorProductoInicial + 9;
+            int contadorIteracionesProducto = 0;
+            for(int k=contadorProductoInicial; k<=contadorProductoFinal; k++){
+                nombreProducto[contadorIteracionesProducto] = bufferRecepcion[k];
+                contadorIteracionesProducto ++;
+            }
+            transactionEntity.setNombreProducto(hexToAscii(byteArrayToHexString(nombreProducto,nombreProducto.length)));
+
+            hoseEntities.add(transactionEntity);
+            pIinicial = pIinicial + 23;
+        }
+
+    }
+
+    public String armarMensajeMuestra(){
+        String retorno = "";
+
+        retorno += "\nBOMBAS ESPERADAS : "+numBombas+"\n";
+
+        for(int i = 0; i< hoseEntities.size(); i++){
+            retorno += "\nIDBOMBA = "+hoseEntities.get(i).getIdBomba()+"\n";
+            retorno += "IDPRODUCTO = "+hoseEntities.get(i).getIdProducto()+"\n";
+            retorno += "DECIMALES = "+hoseEntities.get(i).getCantidadDecimales()+"\n";
+            retorno += "MANGUERA = "+hoseEntities.get(i).getNombreManguera()+"\n";
+            retorno += "PRODUCTO = "+hoseEntities.get(i).getNombreProducto()+"\n";
+        }
+
+        return retorno;
     }
 
 
@@ -328,14 +483,31 @@ public class TcpClient {
         return sb.toString();
     }
 
-    public static String hex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte aByte : bytes) {
-            result.append(String.format("[%02x]", aByte));
-            // upper case
-            // result.append(String.format("%02X", aByte));
+    private static String byteArrayToHexIntGeneral(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            a=a<<8;
+            a=a|((int)(0xFF&bytes[i]));
         }
-        return result.toString();
+        a=a&0x00FFFFFF;
+
+        return "" + a;
+    }
+
+    private static String hexToAscii(String hexStr) {
+        StringBuilder output = new StringBuilder("");
+
+        for (int i = 0; i < hexStr.length(); i += 2) {
+            String str = hexStr.substring(i, i + 2);
+            if(!str.equals("00")){
+                output.append((char) Integer.parseInt(str, 16));
+            }
+
+        }
+
+        return output.toString();
     }
 
 }
