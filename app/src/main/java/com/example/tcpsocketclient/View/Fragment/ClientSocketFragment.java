@@ -17,6 +17,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -35,8 +36,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tcpsocketclient.ConnectTask;
+import com.example.tcpsocketclient.Entities.TransactionEntity;
 import com.example.tcpsocketclient.R;
 import com.example.tcpsocketclient.TcpClient;
+import com.example.tcpsocketclient.Util.Internet.NetworkUtil;
+import com.example.tcpsocketclient.Util.Wifi.EmbeddedPtcl;
 import com.example.tcpsocketclient.View.Activity.MainActivity;
 
 import java.io.IOException;
@@ -45,10 +50,14 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -74,39 +83,44 @@ public class ClientSocketFragment extends Fragment {
 
     private ViewGroup rootView;
 
-    private EditText ed1, edIP, edPort;
-    private Button bt1, bt2, bt3;
     private TextView tv1;
-    private String mensaje = "";
-    TcpClient mTcpClient;
-    private boolean conexion = false;
-    private String mensajeError = "";
-    private String strDireccionIP = "";
-    private int intPORT = 0;
-    private WifiManager wifi;
-    private int networkId = 0;
-
-    private final String nombreRedSocket = "EMBEDDED";
-    //private final String nombreRedSocket = "TP-LINK_AP_F2D8";
 
     private String IPLocal= "";
 
     private LocationManager ubicacion;
 
-
     //variables prueba con handler
     private byte[] bufferTemporal = new byte[300];
-    private ConnectedThread mConnectedThread;
     Handler handlerSocket;
-    Thread thread;
-    Handler handler = new Handler();
     final int handlerState = 0;
+    public static  String SERVER_IP = "192.168.1.15";
+    public static  int SERVER_PORT = 2230;
+
+    private ClientTCPThread clientTCPThread;
 
     //Datos usados para la recepción
     private int indByte=0;
     private int longitudTemp=0;
     int longitudTramaRecepcion = 0;
     private int[] bufferRecepcion = new int[300];
+
+
+    private boolean validarWIFI = true;
+    private int tiempoEspera=0;
+
+
+    byte[] bufferTransmision= new byte[300];
+
+    //variables para la recepción de bombas activas
+    int numBombas=0;
+    List<TransactionEntity> hoseEntities = new ArrayList<>();
+    private String pintarBytes="";
+
+    private NetworkUtil networkUtil;
+
+    private String SSID="MOVISTAR_1B9E";
+    private String Password="6XGE8bA5Ka8oRqzhkfCm";
+
 
     public ClientSocketFragment() {
         // Required empty public constructor
@@ -135,106 +149,80 @@ public class ClientSocketFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         rootView = (ViewGroup) inflater.inflate(R.layout.fragment_client_socket, container, false);
-        initComponent();
+        //initComponent();
         return rootView;
     }
 
-    private void initComponent() {
-        ed1 = (EditText) rootView.findViewById(R.id.ed1);
-        edIP = (EditText) rootView.findViewById(R.id.edIP);
-        edPort = (EditText) rootView.findViewById(R.id.edPort);
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        initComponent();
 
-        bt1 = (Button) rootView.findViewById(R.id.SendButton);
-        bt2 = (Button) rootView.findViewById(R.id.CloseButton);
-        bt3 = (Button) rootView.findViewById(R.id.ConnectedButton);
+
+
+        clientTCPThread =new ClientTCPThread();
+        clientTCPThread.execute();
+        //actualizarTiempo();
+        //crearConexionWIFISocket();
+
+        /*while(validarWIFI){
+            try{
+                Thread.sleep(0);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+
+            tiempoEspera=10000;
+            if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(getContext(),
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+                if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(getContext(),
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                    validateLocation();
+                    //validarWIFI=false;
+                }
+            } else {
+                validateLocation();
+                //validarWIFI=false;
+                //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
+            }
+        }
+
+        if(!validarWIFI){
+            Toast.makeText(rootView.getContext(), "Se validaron los campos.", Toast.LENGTH_LONG).show();
+        }*/
+    }
+
+    private void initComponent() {
+
         tv1 = (TextView) rootView.findViewById(R.id.textView2);
         tv1.setMovementMethod(new ScrollingMovementMethod());
-        bt2.setEnabled(false);
         //new ConnectTask().execute("");
 
-
-        bt1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //myFancyMethod(v);
-                //sendMessage();
-                //Toast.makeText(MainActivity.this, "pasooo111", Toast.LENGTH_SHORT).show();
-
-                //sendMessage();
-                //tv1.setText(bytesToHex(HEX_ARRAY));
-
-
-            }
-        });
-
-        bt2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //myFancyMethod(v);
-                //closeTCP();
-                //Toast.makeText(MainActivity.this, "pasooo2222", Toast.LENGTH_SHORT).show();
-                closeConecction();
-                edIP.setEnabled(true);
-                edPort.setEnabled(true);
-                bt3.setEnabled(true);
-                bt2.setEnabled(false);
-            }
-        });
-
-        bt3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //myFancyMethod(v);
-                //closeTCP();
-                //Toast.makeText(MainActivity.this, "pasooo2222", Toast.LENGTH_SHORT).show();
-                //
-
-                //isConnectedWifi(rootView.getContext());
-                //Log.d("williams","hola" + estadoWifi + " - " + wifi.getConnectionInfo().getSSID() +"-"+wifi.getConnectionInfo().getMacAddress());
-
-                //getLocalIpAddress();
-
-                if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(getContext(),
-                                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                } else {
-
-                    if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.P){
-                        if(estadoGPS()){
-                            setWIFIActive();
-                        }else{
-                            Toast.makeText(rootView.getContext(), "Debe activar su ubicación.", Toast.LENGTH_LONG).show();
-                        }
-                    }else{
-                        setWIFIActive();
-                    }
-                    //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
-                }
-            }
-        });
-
         //prueba con Handler y Socket
-        /*handlerSocket = new Handler() {
+        handlerSocket = new Handler() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             public void handleMessage(android.os.Message msg) {
 
                 if (msg.what == handlerState) {
                     //if message is what we want
                     if(recepciontTwoEasyFuel((byte[])msg.obj,msg.arg1)){           //Modificar metodo para nuevo protocolo
-                        //procesarTramaEasyFuel(msg.arg1);
-                        Toast.makeText(rootView.getContext(),byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n",Toast.LENGTH_LONG);
+                        procesarTramaEasyFuel();
+                        String mostrar = armarMensajeMuestra();
+                        tv1.append("\n"+pintarBytes + "\n" +mostrar);
+                        //Log.d("Daviddd", "Pasooo");
+                        //Toast.makeText(rootView.getContext(),byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n",Toast.LENGTH_LONG);
                     }
                 }
             }
-        };*/
+        };
 
-        //actualizarTiempo();
-        //crearConexionBTSocket();
-
+        networkUtil= new NetworkUtil(rootView.getContext());
     }
 
-    public class ConnectThread extends AsyncTask<String, String, TcpClient> {
+    /*public class ConnectThread extends AsyncTask<String, String, TcpClient> {
         @Override
         protected TcpClient doInBackground(String... message) {
 
@@ -245,8 +233,8 @@ public class ClientSocketFragment extends Fragment {
                 public void messageReceived(String message) {
                     //this method calls the onProgressUpdate
                     //publishProgress(message);
-                    /*String texto = tv1.getText().toString();
-                    tv1.setText(texto + " " + message);*/
+                    //String texto = tv1.getText().toString();
+                    //tv1.setText(texto + " " + message);
                     //Toast.makeText(, "El mensaje está vacio.", Toast.LENGTH_SHORT).show();
                     //Log.d("Daviddd" , message);
                     //mensaje = mensaje + " " +message;
@@ -291,150 +279,210 @@ public class ClientSocketFragment extends Fragment {
             //process server response here....
         }
 
-    }
+    }*/
 
-    public void setWIFIActive() {
-        wifi = (WifiManager) rootView.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        boolean estadoWifi = wifi.isWifiEnabled();
-
-        if (estadoWifi) {
-            WifiInfo connectionInfo = wifi.getConnectionInfo();
-
-            if (connectionInfo.getSSID().equals("\"" + nombreRedSocket + "\"")) {
-                int ipAddress = connectionInfo.getIpAddress();
-                String ipString = Formatter.formatIpAddress(ipAddress);
-                IPLocal=ipString;
-
-                        /*WifiConfiguration conf = new WifiConfiguration();
-                        conf.SSID = redSSID;
-                        conf.wepKeys[0] = "\"123456789\"";
-                        conf.wepTxKeyIndex = 0;
-                        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                        conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                        conf.priority = 1999999999;
-                        wifi.addNetwork(conf);
-                        List<WifiConfiguration> list = wifi.getConfiguredNetworks();
-                        for( WifiConfiguration i : list ) {
-                            Log.d("diegooo", "hola -"+ i.SSID);
-                            if(i.SSID != null && i.SSID.equals(redSSID)) {
-                                wifi.disconnect();
-                                wifi.enableNetwork(i.networkId, true);
-                                wifi.reconnect();
-                                break;
-                            }
-                        }*/
-                //Toast.makeText(rootView.getContext(), "Conectado a red WIFI "+nombreRedSocket+".",Toast.LENGTH_LONG).show();
-                //Log.d("davidddd","hola -" + wifi.isWifiEnabled() + " - " + connectionInfo.getSSID());
-
-
-                //cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, "android.net.conn.CONNECTIVITY_CHANGE");
-                //ºcm.set
-
-                if (isOutputWifi(rootView.getContext())) {
-                    connectSocket();
-                } else {
-                    Toast.makeText(rootView.getContext(), "Debe desactivar sus datos móviles.", Toast.LENGTH_LONG).show();
-                }
-
-
-
-            } else {
-                Toast.makeText(rootView.getContext(), "No se detectó conexión a la red " + nombreRedSocket + ".",
+    public void mostrarMensajeUsuario(final String mensaje){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Stuff that updates the UI
+                //tv1.setText(mensaje);
+                Toast.makeText(rootView.getContext(), mensaje,
                         Toast.LENGTH_LONG).show();
             }
-        } else {
-            Toast.makeText(rootView.getContext(), "Activar WIFI y conectarse a la red " + nombreRedSocket + ".",
-                    Toast.LENGTH_LONG).show();
-        }
-
-
+        });
     }
 
-    public void connectSocket() {
-        if (edIP.getText().toString().trim().equals("") || edPort.getText().toString().trim().equals("")) {
-            Toast.makeText(rootView.getContext(), "Debe completar tanto la DirecciónIP como el Puerto.", Toast.LENGTH_SHORT).show();
-        } else {
-            strDireccionIP = edIP.getText().toString().trim();
-            intPORT = Integer.parseInt(edPort.getText().toString().trim());
-            new ConnectThread().execute("");
-            bt3.setEnabled(false);
-            bt2.setEnabled(true);
-            edIP.setEnabled(false);
-            edPort.setEnabled(false);
-        }
-    }
 
-    public void sendMessage() {
-        String message = ed1.getText().toString().trim();
+    public class ClientTCPThread extends AsyncTask<String, String, Boolean> {
+        //public String SERVER_IP = "192.168.1.15";
+        //public int SERVER_PORT = 2230;
+        private OutputStream mBufferOut;
+        //private DataOutputStream mBufferOut=null;
 
-        if (mTcpClient != null) {
-            if (!message.equals("")) {
-                mTcpClient.sendMessage(message);
-            } else {
-                Toast.makeText(rootView.getContext(), "El mensaje está vacio.", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Toast.makeText(rootView.getContext(), "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
-        }
+        // used to read messages from the server
+        private InputStream mBufferIn;
+        private Socket wifiSocket = null;
+        private boolean mRun=true;
+        public int longitud;
 
-    }
+        @Override
+        protected Boolean doInBackground(String... message) {
+            boolean result = false;
 
-    public void closeConecction() {
-        if (mTcpClient != null) {
-            try {
-                mTcpClient.stopClient();
+            while(validarWIFI){
+                try{
+                    Thread.sleep(tiempoEspera);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mTcpClient = null;
-            tv1.setText("");
-        } else {
-            Toast.makeText(rootView.getContext(), "No existe conexión abierta.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public boolean isOutputWifi(Context context) {
-        boolean retorno = false;
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        connectivityManager.setNetworkPreference(ConnectivityManager.TYPE_WIFI);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        //Log.d("daviddd",networkInfo.getExtraInfo());
-        if (networkInfo != null && networkInfo.isConnected()) {
-
-            if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                // Estas conectado a un Wi-Fi
-                //Toast.makeText(rootView.getContext(), "Existe conectividad a WIFI", Toast.LENGTH_LONG).show();
-                retorno = true;
-            }
-
-        } else {
-            Log.d("MIAPP", "Estás offline");
-            Toast.makeText(rootView.getContext(), "No existe conectividad a Internet",
-                    Toast.LENGTH_LONG).show();
-        }
-
-        return retorno;
-    }
-
-    public void getLocalIpAddress() {
-
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        Log.d("IP: ", inetAddress.getHostAddress().toString());
+                tiempoEspera=8000;
+                if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(getContext(),
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+                    if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(getContext(),
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                        validateLocation();
+                        //validarWIFI=false;
                     }
+                } else {
+                    validateLocation();
+                    //validarWIFI=false;
+                    //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
                 }
             }
-        } catch (SocketException ex) {
-            Log.e("iperror:", ex.toString());
+
+            /*if(!validarWIFI) {
+                Toast.makeText(getActivity(), "Se validaron los campos.", Toast.LENGTH_LONG).show();
+            }*/
+
+            //return true;
+            try {
+
+                Log.d("TCP Client", "C: Connecting...");
+                SocketAddress sockaddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
+                wifiSocket = new Socket();
+                wifiSocket.connect(sockaddr, 5000);
+
+                Log.d("TCP Client", "C: Connectado..");
+                try {
+                    int bytes;
+                    //sends the message to the server
+                    mBufferOut = wifiSocket.getOutputStream();
+
+                    //receives the message which the server sends back
+                    mBufferIn = wifiSocket.getInputStream();
+
+                    //in this while the client listens for the messages sent by the server
+                    int tamBytes=0;
+                    while (mRun) {
+                        //mBufferIn = new DataInputStream(socket.getInputStream());
+                    /*mServerMessage = mBufferIn.readLine();
+
+                    Log.d("RESPONSE FROM SERVER", "S: Received Message: '" + mServerMessage + "'");*/
+                        bufferTemporal = new byte[300];
+                        if(!wifiSocket.isClosed()) {
+                            bytes=0;
+                            //mBufferIn.read(lenBytes, 0, 10);
+                            bytes=mBufferIn.read(bufferTemporal);
+                        /*String readMessage = new String(bufferTemporal, 0, bytes);
+                        Log.v("buffer", "" + readMessage);
+                        // Send the obtained bytes to the UI Activity via handler
+                        mensaje=byteArrayToHexString(bufferTemporal,bytes);
+                        Log.v("", "" + mensaje);
+                        */
+                            handlerSocket.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
+
+
+                            //mMessageListener.messageReceived(mensaje);
+
+                        }
+
+                    }
+                }  catch (IOException e) {
+                    //e.printStackTrace();
+                    //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
+                    result = true;
+                    mRun=false;
+                    //Toast.makeText(rootView.getContext(), "Se perdió la conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                    mostrarMensajeUsuario("Se perdió la conexión con el socket del servidor");
+                }catch (Exception e) {
+                    result = true;
+                    Log.e("TCP", "S: Error", e);
+                } finally {
+                    //the socket must be closed. It is not possible to reconnect to this socket
+                    // after it is closed, which means a new socket instance has to be created.
+                    wifiSocket.close();
+                    mRun=false;
+                }
+
+            } catch (UnknownHostException e) {
+                //e.printStackTrace();
+                Log.e("TCP", e.getMessage(), e);
+            } catch (IOException e) {
+                //e.printStackTrace();
+                //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
+                //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
+            }catch(Exception e){
+                Log.e("TCP", "C: Error", e);
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            //response received from server
+            Log.d("test", "response " + values[0]);
+            //process server response here....
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                Log.i("AsyncTask", "onPostExecute: Completed with an Error.");
+                //Toast.makeText(rootView.getContext(), , Toast.LENGTH_SHORT).show();
+                mostrarMensajeUsuario("No se logro establecer conexión con el socket del servidor");
+            } else {
+                Log.i("AsyncTask", "onPostExecute: Completed.");
+            }
+        }
+
+
+        public void write(int opcode) {
+            bufferTransmision = new byte[300];
+            longitud=0;
+            switch(opcode){
+
+                //TRAMA DE CONFIGURACION
+                case EmbeddedPtcl.b_ext_configuracion:
+                    longitud = EmbeddedPtcl.aceptarTramaConfiguracion(bufferTransmision, bufferRecepcion[3],bufferRecepcion[4],bufferRecepcion[5]);
+                    Log.v("", "" + "Transmision   "+ byteArrayToHexString(bufferTransmision,0x0b));
+                    Log.v("", "" + "Longitud   "+ longitud);
+                    break;
+
+            }
+
+            if (wifiSocket.isConnected()) {
+                    new Thread(new Runnable() {
+                        public void run() {
+                            try {
+                                mBufferOut.write(bufferTransmision,0,longitud);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).start();
+                }
+                //timerNoComunicacion(1500);
+        }
+
+
+
+
+    }
+
+    //Verificación de Ubicación
+    private void validateLocation(){
+        /*if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.P){
+
+        }else{
+            connectWIFI();
+        }*/
+
+        if(estadoGPS()){
+            connectWIFI();
+        }else{
+            mostrarMensajeUsuario("Debe activar su ubicación.");
         }
     }
 
+    //validar si la ubicación está activa
     private boolean estadoGPS(){
         ubicacion = (LocationManager)rootView.getContext().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         if(!ubicacion.isProviderEnabled(LocationManager.GPS_PROVIDER)){
@@ -444,191 +492,24 @@ public class ClientSocketFragment extends Fragment {
         return true;
     }
 
-
-    //prueba de conectarse por WIFI
-    boolean connectToHotspot(String netSSID, String netPass) {
-        wifi = (WifiManager) rootView.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiConfiguration wifiConf = new WifiConfiguration();
-
-        if (!wifi.isWifiEnabled()) {
-            wifi.setWifiEnabled(true);
-        }
-
-        List<ScanResult> scanResultList = wifi.getScanResults();
-        for (ScanResult result : scanResultList) {
-
-            removeWifiNetwork(result.SSID);
-            if (result.SSID.equals(netSSID)) {
-
-                String mode = getSecurityMode(result);
-
-                if (mode.equalsIgnoreCase("OPEN")) {
-
-                    wifiConf.SSID = "\"" + netSSID + "\"";
-                    wifiConf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                    networkId = wifi.addNetwork(wifiConf);
-                    wifi.enableNetwork(networkId, true);
-
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                    if (!wifi.isWifiEnabled())
-                        wifi.setWifiEnabled(true);
-                    return true;
-
-                } else if (mode.equalsIgnoreCase("WEP")) {
-
-                    wifiConf.SSID = "\"" + netSSID + "\"";
-                    wifiConf.wepKeys[0] = "\"" + netPass + "\"";
-                    wifiConf.wepTxKeyIndex = 0;
-                    wifiConf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                    wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                    networkId = wifi.addNetwork(wifiConf);
-                    wifi.enableNetwork(networkId, true);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                    if (!wifi.isWifiEnabled())
-                        wifi.setWifiEnabled(true);
-                    return true;
-
-                } else {
-                    wifiConf.SSID = "\"" + netSSID + "\"";
-                    wifiConf.preSharedKey = "\"" + netPass + "\"";
-                    wifiConf.hiddenSSID = true;
-                    wifiConf.priority = 40;
-                    wifiConf.status = WifiConfiguration.Status.ENABLED;
-                    wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                    wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                    wifiConf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                    wifiConf.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                    wifiConf.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                    wifiConf.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                    wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                    wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-                    wifiConf.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-
-                    networkId = wifi.addNetwork(wifiConf);
-                    if (networkId > 0) {
-                        wifi.disconnect();
-                        wifi.enableNetwork(networkId, true);
-                        wifi.reconnect();
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ie) {
-                            ie.printStackTrace();
-                        }
-                        if (!wifi.isWifiEnabled())
-                            wifi.setWifiEnabled(true);
-                        return true;
-                    }
-                    return false;
-                }
+    //Conexión a la red EMBEEDED
+    private void connectWIFI(){
+        validarWIFI = networkUtil.connectToHotspot(SSID,Password);
+        if(validarWIFI){
+            if (networkUtil.isOutputWifi()) {
+                validarWIFI=false;
+                //connectSocket();
+            } else {
+                //Toast.makeText(getActivity(), "Debe desactivar sus datos móviles.", Toast.LENGTH_LONG).show();
+                mostrarMensajeUsuario("Debe desactivar sus datos móviles.");
             }
+        }else{
+            validarWIFI=true;
+            mostrarMensajeUsuario("No se detectó a la red "+SSID+" cerca de usted.");
         }
-
-        return false;
     }
 
-    void removeNetwork() {
-        wifi.removeNetwork(networkId);
-        wifi.saveConfiguration();
-    }
-
-    private String getSecurityMode(ScanResult scanResult) {
-        final String cap = scanResult.capabilities;
-        final String[] modes = {"WPA", "EAP", "WEP"};
-        for (int i = modes.length - 1; i >= 0; i--) {
-            if (cap.contains(modes[i])) {
-                return modes[i];
-            }
-        }
-        return "OPEN";
-    }
-
-    private void removeWifiNetwork(String ssid) {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        List<WifiConfiguration> configs = wifi.getConfiguredNetworks();
-        if (configs != null) {
-            for (WifiConfiguration config : configs) {
-                if (config.SSID.contains(ssid)) {
-                    wifi.disableNetwork(config.networkId);
-                    wifi.removeNetwork(config.networkId);
-                }
-            }
-        }
-        wifi.saveConfiguration();
-    }
-
-    private class ConnectedThread extends Thread {
-
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        //creation of the connect thread
-        public ConnectedThread(Socket socket) {
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                //Create I/O streams for connection
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage(),"1");
-                Log.e("Crear Hilo","método: ConnectedThread / mensaje: "+e.getMessage(),e);
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            int bytes;
-            byte[] buffer = new byte[256];
-
-            // Keep looping to listen for received messages
-            while (true) {
-                try {
-                    bufferTemporal = new byte[300];
-                    bytes = mmInStream.read(bufferTemporal);        	//read bytes from input buffer
-                    //bytes = mmInStream.read(buffer);
-                    //Log.v("1. mmInStream bytes", "" + bytes);
-                    //Log.v("2. buffer vacio 256", "" + buffer);
-                    //String readMessage = new String(buffer, 0, bytes);
-                    //Log.v("buffer", "" + readMessage);
-                    // Send the obtained bytes to the UI Activity via handler
-                    //Log.v("", "" + byteArrayToHexString(bufferTemporal,bytes));
-
-                    //bluetoothIn.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
-
-
-                    //bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
-                } catch (IOException e) {
-                    //Log.v("CATCH", "" + e.getMessage());
-                    //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.run / mensaje: "+e.getMessage(),"1");
-                    Log.e("Crear Hilo","método: ConnectedThread.run / mensaje: "+e.getMessage(),e);
-                    break;
-                }
-            }
-        }
-
-
-    }
-
+    //INTERPRETAR TRAMA RECIBIDA
     private boolean recepciontTwoEasyFuel(byte[] temporal, int cantidad){
         //Log.v("", "" + byteArrayToHexString(temporal,cantidad));
         boolean hasPacket=false;
@@ -678,7 +559,8 @@ public class ClientSocketFragment extends Fragment {
                             if(indByte==longitudTemp){
                                 if(datoTemporal==0x03){
                                     hasPacket=true;
-                                    Log.v("", "" + "Recepcion   " + byteArrayToHexString(bufferRecepcion,longitudTemp));
+                                    pintarBytes = byteArrayToHexString(bufferRecepcion,longitudTemp);
+                                    Log.v("", "" + "Recepcion   " + pintarBytes);
                                     //mMessageListener.messageReceived(byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n");
                                     //mConnectedThread.write(EmbeddedPtcl.b_ext_configuracion);
                                     //showText(""+ byteArrayToHexString(bufferRecepcion,longitudTemp));
@@ -706,6 +588,178 @@ public class ClientSocketFragment extends Fragment {
         return hasPacket;
     }
 
+    //PROCESAR TRAMA COMPLETA RECIBIDA
+    public void procesarTramaEasyFuel(){
+        switch (bufferRecepcion[4]){
+            //TRAMA DE CONFIGURACION
+            case 0x06:
+                if(bufferRecepcion[5] == 0x01 || bufferRecepcion[5] == 0x02){
+                    //TRAMA DE CONFIGURACION
+                    //Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(bufferRecepcion,bufferRecepcion.length)));
+                    //Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
+                    //Log.v("TRAMA EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACEmbedded,tramaMACEmbedded.length)));
+                    //Log.v("PING HOST EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaPingHost,tramaPingHost.length)));
+                    //Log.v("NÚMERO DE BOMBAS", "" + byteArrayToHexInt(numeroBombas,1));
+
+                    llenarDatosConfiguracion();
+
+                    clientTCPThread.write(EmbeddedPtcl.b_ext_configuracion); //0x06
+                }
+                break;
+
+            //CAMBIO DE ESTADO
+            case 0x01:
+
+                break;
+
+            case 0x07:
+                switch(bufferRecepcion[5]){
+                    case 0x01:
+                        break;
+                }
+                break;
+        }
+    }
+
+    //CARGAR DATOS BOMBAS ACTIVAS RECIBIDAS
+    public void llenarDatosConfiguracion(){
+
+        hoseEntities = new ArrayList<>();
+        //**********************************************************
+
+        //Capturar Nombre Host WIFI
+        int[] tramaNombreEmbedded = new int[16];
+        int c = 0;
+        for(int i = 8; i<= 23;  i++){
+            tramaNombreEmbedded[c] = bufferRecepcion[i];
+            c++;
+        }
+
+        Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
+        //**********************************************************
+        //Capturar MAC TABLET
+        int[] tramaMACTablet= new int[6];
+        c = 0;
+        for(int i = 24; i<= 29;  i++){
+            tramaMACTablet[c] = bufferRecepcion[i];
+            c++;
+        }
+        Log.v("MAC TABLET EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACTablet,tramaMACTablet.length)));
+
+
+        //**********************************************************
+        //Capturar Contraseña Red Host
+        int[] contrasenaHostEmbedded = new int[11];
+        c = 0;
+        for(int i = 30; i<= 40;  i++){
+            contrasenaHostEmbedded[c] = bufferRecepcion[i];
+            c++;
+        }
+
+        Log.v("CONTRASENA RED EMBEDDED", "" + hexToAscii(byteArrayToHexString(contrasenaHostEmbedded,contrasenaHostEmbedded.length)));
+
+
+        //**********************************************************
+        //Capturar Nro Bombas
+        int[] numeroBombas = new int[1];
+        numeroBombas[0] = bufferRecepcion[41];
+        numBombas = Integer.parseInt(byteArrayToHexIntGeneral(numeroBombas,1));
+        //**********************************************************
+        //int pIinicial = 42;
+
+        //obtener solo IDbombas
+        int[] idBombas = new int[numBombas];
+
+        int pIinicial = 42;
+        for(int i = 0; i< numBombas;  i++){
+            idBombas[i] = bufferRecepcion[pIinicial];
+            pIinicial+=1;
+        }
+
+        for(int i = 0; i< numBombas; i++){
+            TransactionEntity transactionEntity = new TransactionEntity();
+            transactionEntity.setEstadoRegistro("P");
+            //**********************************************************
+            //Capturar idBomba
+            int[] idBomba = new int[1];
+            idBomba[0] = bufferRecepcion[pIinicial];
+            transactionEntity.setIdBomba(Integer.parseInt((byteArrayToHexIntGeneral(idBomba,1))));
+            //**********************************************************
+            //Capturar idProducto
+            int[] idProducto = new int[1];
+            idProducto[0] = bufferRecepcion[pIinicial + 1];
+            transactionEntity.setIdProducto(Integer.parseInt(byteArrayToHexIntGeneral(idProducto,1)));
+            //**********************************************************
+            //Capturar cantidadDecimales
+            int[] cantidadDecimales = new int[1];
+            cantidadDecimales[0] = bufferRecepcion[pIinicial + 2];
+            transactionEntity.setCantidadDecimales(Integer.parseInt(byteArrayToHexIntGeneral(cantidadDecimales,1)));
+            //**********************************************************
+            //Capturar cantidadDecimales
+            int[] nombreManguera = new int[10];
+            int contadorMangueraInicial = pIinicial + 3;
+            int contadorMangueraFinal = contadorMangueraInicial + 9;
+            int contadorIteracionesManguera = 0;
+            for(int j=contadorMangueraInicial; j<=contadorMangueraFinal; j++){
+                nombreManguera[contadorIteracionesManguera] = bufferRecepcion[j];
+                contadorIteracionesManguera ++;
+            }
+            transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
+
+            int[] nombreProducto = new int[10];
+            int contadorProductoInicial = pIinicial + 13;
+            int contadorProductoFinal = contadorProductoInicial + 9;
+            int contadorIteracionesProducto = 0;
+            for(int k=contadorProductoInicial; k<=contadorProductoFinal; k++){
+                nombreProducto[contadorIteracionesProducto] = bufferRecepcion[k];
+                contadorIteracionesProducto ++;
+            }
+            transactionEntity.setNombreProducto(hexToAscii(byteArrayToHexString(nombreProducto,nombreProducto.length)));
+
+            hoseEntities.add(transactionEntity);
+            pIinicial = pIinicial + 23;
+        }
+
+    }
+
+
+    private String byteArrayToHexIntGeneral(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            a=a<<8;
+            a=a|((int)(0xFF&bytes[i]));
+        }
+        a=a&0x00FFFFFF;
+
+        return "" + a;
+    }
+
+    private String hexToAscii(String hexStr) {
+        StringBuilder output = new StringBuilder("");
+
+        for (int i = 0; i < hexStr.length(); i += 2) {
+            String str = hexStr.substring(i, i + 2);
+            if(!str.equals("00")){
+                output.append((char) Integer.parseInt(str, 16));
+            }
+
+        }
+
+        return output.toString();
+    }
+
+    private String byteArrayToHexString(final byte[] bytes, int cantidad) {
+        StringBuilder sb = new StringBuilder();
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            sb.append(String.format("[%02x]", bytes[i]&0xFF));
+            //sb.append((char)(0xFF&bytes[i]));
+        }
+        return sb.toString();
+    }
+
     private static String byteArrayToHexString(final int[] bytes, int cantidad) {
         StringBuilder sb = new StringBuilder();
         //for(byte b : bytes){
@@ -716,72 +770,27 @@ public class ClientSocketFragment extends Fragment {
         return sb.toString();
     }
 
-    private void actualizarTiempo(){
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true){
-                    try{
-                        Thread.sleep(1000);
 
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
-                            Log.d("Handler: ",date);
-                            //txtFechaMF.setText(date);
-                        }
-                    });
-                }
-            }
-        });
-        thread.start();
+    public String armarMensajeMuestra(){
+        String retorno = "";
+
+        retorno += "\nBOMBAS ESPERADAS : "+numBombas+"\n";
+
+        for(int i = 0; i< hoseEntities.size(); i++){
+            retorno += "\nIDBOMBA = "+hoseEntities.get(i).getIdBomba()+"\n";
+            retorno += "IDPRODUCTO = "+hoseEntities.get(i).getIdProducto()+"\n";
+            retorno += "DECIMALES = "+hoseEntities.get(i).getCantidadDecimales()+"\n";
+            retorno += "MANGUERA = "+hoseEntities.get(i).getNombreManguera()+"\n";
+            retorno += "PRODUCTO = "+hoseEntities.get(i).getNombreProducto()+"\n";
+        }
+
+        return retorno;
     }
-    //CREA UNA NUEVA INSTANCIA DE BLUETOOTH SOCKET
-    /*private void crearConexionBTSocket(){
-        //Get MAC address from the Common class
-        // address = Const.address;
-        address = PreferencesHelper.getBluetoothAddress(getActivity());
 
-
-        //Create device and set the MAC address
-        Log.v("Dirección", "Conexión al dispositivo con dirección : " + address);
-        BluetoothDevice device = btAdapter.getRemoteDevice(address);
-
-        try {
-            btSocket = createBluetoothSocket(device);
-            Toast.makeText(getActivity(), "Creación de socket exitosa con el dispositivo: "+address, Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage(),"1");
-            Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+address + " falló", Toast.LENGTH_LONG).show();
-            mListener.goToBluetoothConfiguration(); //Go back to the main view
-        }
-        // Establish the Bluetooth socket connection.
-        try
-        {
-            btSocket.connect();
-            mConnectedThread = new ConnectedThread(btSocket);
-            mConnectedThread.start();
-
-        } catch (IOException e) {
-            try
-            {
-                btSocket.close();
-                Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage(),"1");
-                mListener.goToBluetoothConfiguration(); //Go back to the main view
-                Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+address + " falló", Toast.LENGTH_LONG).show();
-            } catch (IOException e2)
-            {
-                Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage(),"1");
-                mListener.goToBluetoothConfiguration(); //Go back to the main view
-                Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+address + " falló", Toast.LENGTH_LONG).show();
-                //insert code to deal with this
-            }
-        }
-
-    }*/
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        clientTCPThread.cancel(true); //In case the task is currently running
+    }
 
 }
