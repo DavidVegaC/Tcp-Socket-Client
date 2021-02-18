@@ -15,20 +15,25 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:hardwareAccelerated="false"
+        android:icon="@mipmap/ic_logoassac"
         android:label="@string/app_name"
-        android:largeHeap="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_logoassac_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".View.Activity.MainActivity">
+        android:usesCleartextTraffic="true"
+        android:theme="@style/AppThemeAssac">
+
+        <activity android:name=".View.Activity.SplashActivity"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".View.Activity.MainActivity"
+            android:screenOrientation="landscape" />
+
     </application>
 
 </manifest>

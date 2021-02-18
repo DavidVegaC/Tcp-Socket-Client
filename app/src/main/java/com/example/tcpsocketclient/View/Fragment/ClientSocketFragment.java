@@ -121,6 +121,8 @@ public class ClientSocketFragment extends Fragment {
     private String SSID="MOVISTAR_1B9E";
     private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
+    private ViewGroup layout;
+
 
     public ClientSocketFragment() {
         // Required empty public constructor
@@ -197,8 +199,8 @@ public class ClientSocketFragment extends Fragment {
 
     private void initComponent() {
 
-        tv1 = (TextView) rootView.findViewById(R.id.textView2);
-        tv1.setMovementMethod(new ScrollingMovementMethod());
+        //tv1 = (TextView) rootView.findViewById(R.id.textView2);
+        //tv1.setMovementMethod(new ScrollingMovementMethod());
         //new ConnectTask().execute("");
 
         //prueba con Handler y Socket
@@ -211,7 +213,7 @@ public class ClientSocketFragment extends Fragment {
                     if(recepciontTwoEasyFuel((byte[])msg.obj,msg.arg1)){           //Modificar metodo para nuevo protocolo
                         procesarTramaEasyFuel();
                         String mostrar = armarMensajeMuestra();
-                        tv1.append("\n"+pintarBytes + "\n" +mostrar);
+                        //tv1.append("\n"+pintarBytes + "\n" +mostrar);
                         //Log.d("Daviddd", "Pasooo");
                         //Toast.makeText(rootView.getContext(),byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n",Toast.LENGTH_LONG);
                     }
@@ -317,7 +319,7 @@ public class ClientSocketFragment extends Fragment {
                     e.printStackTrace();
                 }
 
-                tiempoEspera=8000;
+                tiempoEspera=6000;
                 if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(getContext(),
                                 android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -348,6 +350,7 @@ public class ClientSocketFragment extends Fragment {
                 wifiSocket.connect(sockaddr, 5000);
 
                 Log.d("TCP Client", "C: Connectado..");
+                mostrarMensajeUsuario("Se conectó al Socket con éxito.");
                 try {
                     int bytes;
                     //sends the message to the server
@@ -495,6 +498,11 @@ public class ClientSocketFragment extends Fragment {
     //Conexión a la red EMBEEDED
     private void connectWIFI(){
         validarWIFI = networkUtil.connectToHotspot(SSID,Password);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
         if(validarWIFI){
             if (networkUtil.isOutputWifi()) {
                 validarWIFI=false;

@@ -7,20 +7,26 @@ import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
+
 import com.example.tcpsocketclient.R;
+import com.example.tcpsocketclient.Util.CustomAnimation;
+import com.example.tcpsocketclient.Util.NavigationFragment;
 import com.example.tcpsocketclient.View.Fragment.ClientSocketFragment;
 import com.example.tcpsocketclient.View.Fragment.ServerSocketFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
-    public static final String SERVER_IP = "192.168.1.15"; //server IP address
-    public static final int SERVER_PORT = 2230;
+    //ADDITIONAL CODE
+    private LinearLayout btnEstacion;
+    private LinearLayout btnDuplicadoTicket;
+    private ClientSocketFragment clientSocketFragment = new ClientSocketFragment();
 
     BottomNavigationView bottomNavigationView;
-
-    //private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,13 +36,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initComponent(){
-        bottomNavigationView =findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                new ClientSocketFragment()).commit();
+        btnEstacion = findViewById(R.id.btnEstacion);
+        btnDuplicadoTicket = findViewById(R.id.btnDuplicadoTicket);
+
+        btnEstacion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goToEmbeddedFragment();
+            }
+        });
+
+        goToEmbeddedFragment();
+        //bottomNavigationView =findViewById(R.id.bottom_navigation);
+        //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
+        //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,new ClientSocketFragment()).commit();
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener navListener =
+    public void goToEmbeddedFragment(){
+        NavigationFragment.addFragment(null, clientSocketFragment, "connecctionEmbFragment", this,
+                R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
+    }
+
+    /*private BottomNavigationView.OnNavigationItemSelectedListener navListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -55,6 +76,12 @@ public class MainActivity extends AppCompatActivity {
                             selectFragment).commit();
                     return true;
                 }
-            };
+            };*/
 
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+//        drawer_layout.closeDrawer(GravityCompat.START);
+//
+        return true;
+    }
 }

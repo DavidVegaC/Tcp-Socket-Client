@@ -1,10 +1,182 @@
 <resources>
-    <!-- Base application theme. -->
+    <!-- Base application theme.
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+        <- Customize your theme here.
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>-->
+
+    <style name="AppThemeAssac" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!--colorPrimaty: color para la barra de aplicaciones y otros elementos primarios de la interfaz de usuario-->
+        <item name="colorPrimary"> @color/md_red_800</item>
+        <!--colorPrimayDark: Una variante más oscura del color primario, utilizada para la barra de estado (en Android 5.0+) y las barras contextuales de la aplicación-->
+        <item name="colorPrimaryDark">@color/md_red_900</item>
+        <!--colorAccent: un color secundario para controles como casillas de verificación y campos de texto-->
+        <item name="colorAccent">@color/md_red_500</item>
+
+        <item name="android:textColor">@color/md_white_1000</item>
+
+        <!--        <item name="android:textColorPrimary">@color/md_white_1000</item>-->
+        <!--        <item name="android:textColorSecondary">@color/md_black_assac</item>-->
+        <!--        <item name="android:textColorHint">@color/md_white_1000</item>-->
+
+        <item name="actionMenuTextColor">@color/md_red_800</item>
+
+
+
+        <!--        &lt;!&ndash;controla el estado 'normal' de componentes como un EditText no seleccionado y casillas de verificación y botones de radio no seleccionados&ndash;&gt;-->
+        <!--        <item name="colorControlNormal">@color/md_blue_800</item>-->
+        <!--        &lt;!&ndash;controla el color ondulado&ndash;&gt;-->
+        <!--        <item name="colorControlHighlight">@color/md_amber_500</item>-->
+        <!--        &lt;!&ndash;Cambia el color al pasar de un radio button a otro / activo /inactivo&ndash;&gt;-->
+        <!--        <item name="colorSwitchThumbNormal">@color/md_purple_800</item>-->
+        <!--        &lt;!&ndash;Si se quiere que el action bar superponga al Toolbar&ndash;&gt;-->
+        <!--        <item name="windowActionModeOverlay">true</item>-->
+        <!--        <item name="actionModeBackground">@color/md_amber_500</item>-->
+    </style>
+
+    <style name="AppThemeProgressDialog" parent="Theme.MaterialComponents.Dialog">
+        <item name="android:textColor">@color/md_black_1000</item>
+    </style>
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_red_500</item>
+        <item name="colorPrimaryDark">@color/md_red_700</item>
+        <item name="colorAccent">@color/md_blue_A200</item>
+        <item name="colorControlHighlight">@color/md_red_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_red_500</item>
+    </style>
+
+    <style name="AppTheme2" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_blue_500</item>
+        <item name="colorPrimaryDark">@color/md_blue_700</item>
+        <item name="colorAccent">@color/md_green_A700</item>
+        <item name="colorControlHighlight">@color/md_blue_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_blue_500</item>
+
+    </style>
+
+    <style name="AppTheme3" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_green_500</item>
+        <item name="colorPrimaryDark">@color/md_green_700</item>
+        <item name="colorAccent">@color/md_blue_A200</item>
+        <item name="colorControlHighlight">@color/md_green_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_green_500</item>
+
+    </style>
+
+    <style name="AppTheme4" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_orange_500</item>
+        <item name="colorPrimaryDark">@color/md_orange_700</item>
+        <item name="colorAccent">@color/md_red_A200</item>
+        <item name="colorControlHighlight">@color/md_orange_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_orange_500</item>
+
+    </style>
+
+    <style name="AppTheme5" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_pink_500</item>
+        <item name="colorPrimaryDark">@color/md_pink_700</item>
+        <item name="colorAccent">@color/md_indigo_A400</item>
+        <item name="colorControlHighlight">@color/md_pink_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_pink_500</item>
+
+    </style>
+
+    <style name="AppTheme6" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_indigo_500</item>
+        <item name="colorPrimaryDark">@color/md_indigo_700</item>
+        <item name="colorAccent">@color/md_pink_A200</item>
+        <item name="colorControlHighlight">@color/md_indigo_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_indigo_500</item>
+
+    </style>
+
+    <style name="AppTheme7" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_brown_500</item>
+        <item name="colorPrimaryDark">@color/md_brown_700</item>
+        <item name="colorAccent">@color/md_amber_700</item>
+        <item name="colorControlHighlight">@color/md_brown_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_brown_500</item>
+
+    </style>
+
+    <style name="AppTheme8" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_blue_grey_500</item>
+        <item name="colorPrimaryDark">@color/md_blue_grey_700</item>
+        <item name="colorAccent">@color/md_light_blue_A400</item>
+        <item name="colorControlHighlight">@color/md_blue_grey_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_blue_grey_500</item>
+
+    </style>
+
+    <style name="AppTheme9" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_falcon_500</item>
+        <item name="colorPrimaryDark">@color/md_falcon_700</item>
+        <item name="colorAccent">@color/md_falcon_A400</item>
+        <item name="colorControlHighlight">@color/md_falcon_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_falcon_500</item>
+
+    </style>
+
+    <style name="AppTheme10" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/md_light_blue_500</item>
+        <item name="colorPrimaryDark">@color/md_light_blue_700</item>
+        <item name="colorAccent">@color/md_light_green_A700</item>
+        <item name="colorControlHighlight">@color/md_light_blue_500_25</item>​
+        <item name="colorControlNormal">@color/md_black_1000_50</item>
+        <item name="colorSwitchThumbNormal">@color/md_grey_200</item>
+        <item name="android:colorForeground">@color/md_black_1000_75</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/md_light_blue_500</item>
+
     </style>
 
 </resources>

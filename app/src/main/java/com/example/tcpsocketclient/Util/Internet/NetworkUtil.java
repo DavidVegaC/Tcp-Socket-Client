@@ -131,17 +131,17 @@ public class NetworkUtil {
         if (!wifi.isWifiEnabled()) {
             wifi.setWifiEnabled(true);
             try {
-                Thread.sleep(3000);
+                Thread.sleep(6000);
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }
         }
 
-        WifiInfo connectionInfo = wifi.getConnectionInfo();
+        /*WifiInfo connectionInfo = wifi.getConnectionInfo();
 
         if(connectionInfo.getSSID().equals("\"" + netSSID + "\"")){
             return true;
-        }
+        }*/
 
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             retorno=false;
@@ -157,7 +157,7 @@ public class NetworkUtil {
                 wifi.reconnect();
 
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }

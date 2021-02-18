@@ -1,5 +1,22 @@
 <resources>
-    <string name="app_name">TcpSocketClient</string>
+    <string name="app_name">CRONOS WIFI</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hint_text">Texto</string>
+
+    <!-- Variables personalizadas -->
+    <string name="login_title">CRONOS Mobile</string>
+    <string name="login">Inicio de Sesión</string>
+    <string name="user">Usuario</string>
+    <string name="password">Contraseña</string>
+    <string name="entry">Ingresar</string>
+    <string name="save_conf_title">Guardar</string>
+
+    <string name="select_device">Selecciona un dispositivo a conectar</string>
+    <string name="none_found">Nigún dispositivo encontrado</string>
+    <string name="none_paired">Nigún dispositivo encontrado</string>
+
+    <string name="navdrawer_open">Abrir navegador</string>
+    <string name="navdrawer_close">Cerrar navegador</string>
 </resources>
