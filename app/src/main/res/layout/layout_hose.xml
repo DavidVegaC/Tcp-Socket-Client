@@ -1,29 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="200dp"
-android:layout_height="360dp"
-android:layout_weight="1"
-android:orientation="vertical"
-
-android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado"
-android:layout_marginLeft="4dp"
-android:layout_marginRight="4dp">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ly_cuadrante"
+    android:layout_width="200dp"
+    android:layout_height="360dp"
+    android:layout_weight="1"
+    android:orientation="vertical"
+    android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado"
+    android:layout_marginLeft="4dp"
+    android:layout_marginRight="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_margin="10dp">
+        android:layout_marginBottom="0dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp">
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
-
             <ImageView
-                android:layout_width="23dp"
+                android:id="@+id/iv_estado_conexion"
+                android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:src="@drawable/ic_state_station_green_64"></ImageView>
         </LinearLayout>
@@ -33,11 +35,11 @@ android:layout_marginRight="4dp">
             android:layout_weight="1"
             android:orientation="vertical">
             <TextView
+                android:id="@+id/txt_nombre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="M1"
+                android:text="M"
                 android:textSize="20sp"
-                android:textColor="#FFFFFF"
                 android:gravity="center"></TextView>
 
         </LinearLayout>
@@ -47,6 +49,7 @@ android:layout_marginRight="4dp">
             android:layout_weight="1"
             android:orientation="vertical">
             <ImageView
+                android:id="@+id/iv_estado_abastecimiento"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:visibility="gone"
@@ -60,6 +63,7 @@ android:layout_marginRight="4dp">
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
+            android:id="@+id/txt_Estado_abastecimiento"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Disponible"
@@ -70,6 +74,7 @@ android:layout_marginRight="4dp">
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ly_cuadrante_estado_abasteciendo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -108,6 +113,7 @@ android:layout_marginRight="4dp">
                 android:layout_height="match_parent"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/txt_placa"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:text="-"
@@ -138,6 +144,7 @@ android:layout_marginRight="4dp">
             </LinearLayout>
 
             <TextView
+                android:id="@+id/txt_galones"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="00.0"
@@ -150,6 +157,7 @@ android:layout_marginRight="4dp">
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ly_cuadrante_estado_pausa"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -164,6 +172,7 @@ android:layout_marginRight="4dp">
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ly_cuadrante_estado_abasteciendo2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -205,6 +214,7 @@ android:layout_marginRight="4dp">
                 android:layout_marginLeft="10dp">
 
                 <TextView
+                    android:id="@+id/txt_producto"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
@@ -250,6 +260,7 @@ android:layout_marginRight="4dp">
                 android:layout_height="match_parent"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/txt_ultimo_ticket"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:text="0"
@@ -263,6 +274,7 @@ android:layout_marginRight="4dp">
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ly_cuadrante_estado_pausa2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="visible"
@@ -277,7 +289,6 @@ android:layout_marginRight="4dp">
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:textSize="20sp"
-                android:textColor="#FFFFFF"
                 android:text="Último Despacho"></TextView>
         </LinearLayout>
 
@@ -299,7 +310,6 @@ android:layout_marginRight="4dp">
                     android:text="Galones"
                     android:layout_gravity="center"
                     android:textSize="25sp"
-                    android:textColor="#FFFFFF"
                     android:gravity="center_vertical"></TextView>
             </LinearLayout>
 
@@ -320,6 +330,7 @@ android:layout_marginRight="4dp">
                 android:layout_marginLeft="10dp">
 
                 <TextView
+                    android:id="@+id/txt_ultimo_galon_p2"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
@@ -349,7 +360,6 @@ android:layout_marginRight="4dp">
                     android:layout_height="match_parent"
                     android:text="Ticket"
                     android:textSize="25sp"
-                    android:textColor="#FFFFFF"
                     android:layout_gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
@@ -367,6 +377,7 @@ android:layout_marginRight="4dp">
                 android:layout_height="match_parent"
                 android:orientation="vertical">
                 <TextView
+                    android:id="@+id/txt_ultimo_ticket_p2"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:text="0"
@@ -379,4 +390,7 @@ android:layout_marginRight="4dp">
         </LinearLayout>
 
     </LinearLayout>
+
+
+
 </LinearLayout>

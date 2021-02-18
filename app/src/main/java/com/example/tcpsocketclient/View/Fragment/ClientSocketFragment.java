@@ -1,6 +1,7 @@
 package com.example.tcpsocketclient.View.Fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -33,6 +34,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,7 +96,7 @@ public class ClientSocketFragment extends Fragment {
     private byte[] bufferTemporal = new byte[300];
     Handler handlerSocket;
     final int handlerState = 0;
-    public static  String SERVER_IP = "192.168.1.15";
+    public static  String SERVER_IP = "192.168.1.113";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -118,10 +121,28 @@ public class ClientSocketFragment extends Fragment {
 
     private NetworkUtil networkUtil;
 
-    private String SSID="MOVISTAR_1B9E";
+    private String SSID="TP-LINK_AP_F2D8";
     private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
     private ViewGroup layout;
+
+    private int hijoLayout=0;
+    List<LinearLayout> inflaters= new ArrayList<>();
+
+    //Trabajar con las mangueras
+    LinearLayout ly_cuadrante;
+    LinearLayout ly_cuadrante_estado_pausa;
+    LinearLayout ly_cuadrante_estado_pausa2;
+    LinearLayout ly_cuadrante_estado_abasteciendo;
+    LinearLayout ly_cuadrante_estado_abasteciendo2;
+    TextView txt_ultimo_galon_p2;
+    TextView txt_ultimo_ticket_p2;
+    ImageView iv_estado_abastecimiento;
+    TextView   txt_ultimo_ticket;
+    TextView   txt_Estado_abastecimiento;
+    TextView   txt_galones;
+    TextView   txt_placa;
+    TextView   txt_producto;
 
 
     public ClientSocketFragment() {
@@ -160,41 +181,10 @@ public class ClientSocketFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         initComponent();
 
-
-
         clientTCPThread =new ClientTCPThread();
         clientTCPThread.execute();
         //actualizarTiempo();
         //crearConexionWIFISocket();
-
-        /*while(validarWIFI){
-            try{
-                Thread.sleep(0);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-            }
-
-            tiempoEspera=10000;
-            if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(getContext(),
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(getContext(),
-                                android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                    validateLocation();
-                    //validarWIFI=false;
-                }
-            } else {
-                validateLocation();
-                //validarWIFI=false;
-                //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
-            }
-        }
-
-        if(!validarWIFI){
-            Toast.makeText(rootView.getContext(), "Se validaron los campos.", Toast.LENGTH_LONG).show();
-        }*/
     }
 
     private void initComponent() {
@@ -204,6 +194,8 @@ public class ClientSocketFragment extends Fragment {
         //new ConnectTask().execute("");
 
         //prueba con Handler y Socket
+
+        layout = (ViewGroup) rootView.findViewById(R.id.LayoutContentHoses);
         handlerSocket = new Handler() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             public void handleMessage(android.os.Message msg) {
@@ -212,7 +204,8 @@ public class ClientSocketFragment extends Fragment {
                     //if message is what we want
                     if(recepciontTwoEasyFuel((byte[])msg.obj,msg.arg1)){           //Modificar metodo para nuevo protocolo
                         procesarTramaEasyFuel();
-                        String mostrar = armarMensajeMuestra();
+                        //String mostrar = armarMensajeMuestra();
+
                         //tv1.append("\n"+pintarBytes + "\n" +mostrar);
                         //Log.d("Daviddd", "Pasooo");
                         //Toast.makeText(rootView.getContext(),byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n",Toast.LENGTH_LONG);
@@ -498,11 +491,11 @@ public class ClientSocketFragment extends Fragment {
     //Conexión a la red EMBEEDED
     private void connectWIFI(){
         validarWIFI = networkUtil.connectToHotspot(SSID,Password);
-        try {
+        /*try {
             Thread.sleep(3000);
         } catch (InterruptedException ie) {
             ie.printStackTrace();
-        }
+        }*/
         if(validarWIFI){
             if (networkUtil.isOutputWifi()) {
                 validarWIFI=false;
@@ -513,7 +506,7 @@ public class ClientSocketFragment extends Fragment {
             }
         }else{
             validarWIFI=true;
-            mostrarMensajeUsuario("No se detectó a la red "+SSID+" cerca de usted.");
+            mostrarMensajeUsuario(networkUtil.mensajeError);
         }
     }
 
@@ -610,8 +603,17 @@ public class ClientSocketFragment extends Fragment {
                     //Log.v("NÚMERO DE BOMBAS", "" + byteArrayToHexInt(numeroBombas,1));
 
                     llenarDatosConfiguracion();
-
+                    agregarImagenEstaciones();
                     clientTCPThread.write(EmbeddedPtcl.b_ext_configuracion); //0x06
+
+                    /*try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ie) {
+                        ie.printStackTrace();
+                    }*/
+
+                    //cambiarEstadoIniciaAbastecimiento(1);
+
                 }
                 break;
 
@@ -778,7 +780,6 @@ public class ClientSocketFragment extends Fragment {
         return sb.toString();
     }
 
-
     public String armarMensajeMuestra(){
         String retorno = "";
 
@@ -794,6 +795,148 @@ public class ClientSocketFragment extends Fragment {
 
         return retorno;
     }
+
+
+    @SuppressLint("InlinedApi")
+    private void agregarImagenEstaciones()
+    {
+        layout.removeAllViews();
+        inflaters = new ArrayList<>();
+        int id=0;
+        for(int i=0;i <hoseEntities.size();i++){
+            LayoutInflater inflater = LayoutInflater.from(rootView.getContext());
+            id = R.layout.layout_hose;
+            LinearLayout hoseLayout = (LinearLayout) inflater.inflate(id, null, false);
+            layout.addView(hoseLayout,i);
+            inflaters.add(hoseLayout);
+            //layout.addView(hoseLayout);
+        }
+      //hijoLayout++;
+    }
+
+    //Cambio de estados de Abastecimiento
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoIniciaAbastecimiento(int pIdBomba){
+        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
+        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
+        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
+        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+        ly_cuadrante_estado_pausa = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_pausa);
+        ly_cuadrante_estado_pausa2 = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_pausa2);
+        ly_cuadrante_estado_abasteciendo = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_abasteciendo);
+        ly_cuadrante_estado_abasteciendo2 = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_abasteciendo2);
+        txt_ultimo_galon_p2 = inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_galon_p2);
+        txt_ultimo_ticket_p2 = inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket_p2);
+        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
+        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
+        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+
+
+        txt_Estado_abastecimiento.setText("Llamando");
+        iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_llamando_64);
+        txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_orange_assac));
+        txt_galones.setTextColor(getResources().getColor(R.color.md_orange_assac));
+        txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_orange_assac));
+        txt_placa.setTextColor(getResources().getColor(R.color.md_orange_assac));
+        txt_producto.setTextColor(getResources().getColor(R.color.md_orange_assac));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_llamando));
+        txt_galones.setText("0.00");
+        txt_placa.setText("-");
+        txt_producto.setText("-");
+        ly_cuadrante_estado_pausa.setVisibility(View.GONE);
+        ly_cuadrante_estado_pausa2.setVisibility(View.GONE);
+        ly_cuadrante_estado_abasteciendo.setVisibility(View.VISIBLE);
+        ly_cuadrante_estado_abasteciendo2.setVisibility(View.VISIBLE);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoAutorizarAbastecimiento(int pIdBomba){
+        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
+        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+
+            txt_Estado_abastecimiento.setText("Abasteciendo");
+            iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
+            txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_green_assac));
+            txt_galones.setTextColor(getResources().getColor(R.color.md_green_assac));
+            txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_green_assac));
+            txt_placa.setTextColor(getResources().getColor(R.color.md_green_assac));
+            txt_producto.setTextColor(getResources().getColor(R.color.md_green_assac));
+            ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_autorizado));
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoTerminaAbastecimiento(int pIdBomba){
+        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
+        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+
+
+        txt_Estado_abastecimiento.setText("Disponible");
+        iv_estado_abastecimiento.setImageResource(R.drawable.ic_station_yellow_64);
+        txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_galones.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_placa.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_producto.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_pausa));
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoSinFlujo(int pIdBomba){
+
+        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
+        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+
+        txt_Estado_abastecimiento.setText("No Flujo");
+        iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
+        txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_galones.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_placa.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_producto.setTextColor(getResources().getColor(R.color.md_red_assac));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_sin_flujo));
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoCierreHook(int pIdBomba){
+
+        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
+        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+
+        txt_Estado_abastecimiento.setText("Cierre Hook");
+        iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
+        txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_galones.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_placa.setTextColor(getResources().getColor(R.color.md_red_assac));
+        txt_producto.setTextColor(getResources().getColor(R.color.md_red_assac));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_sin_flujo));
+
+    }
+
 
     @Override
     public void onDestroy() {

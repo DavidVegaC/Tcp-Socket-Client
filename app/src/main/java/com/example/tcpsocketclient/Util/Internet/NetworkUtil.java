@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -22,6 +23,7 @@ public class NetworkUtil {
     public Context ctx;
     private WifiManager wifi;
     private final String nombreRedSocket = "EMBEDDED";
+    public String mensajeError="";
     private int networkId = 0;
 
     public  NetworkUtil(Context context){
@@ -131,17 +133,17 @@ public class NetworkUtil {
         if (!wifi.isWifiEnabled()) {
             wifi.setWifiEnabled(true);
             try {
-                Thread.sleep(6000);
+                Thread.sleep(5000);
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }
         }
 
-        /*WifiInfo connectionInfo = wifi.getConnectionInfo();
+        WifiInfo connectionInfo = wifi.getConnectionInfo();
 
-        if(connectionInfo.getSSID().equals("\"" + netSSID + "\"")){
+        if(connectionInfo.getSSID().equals("\"" + netSSID + "\"")&& connectionInfo.getSupplicantState() == SupplicantState.COMPLETED){
             return true;
-        }*/
+        }
 
         if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             retorno=false;
@@ -162,6 +164,13 @@ public class NetworkUtil {
                     ie.printStackTrace();
                 }
 
+                if(wifi.getConnectionInfo().getSupplicantState() == SupplicantState.COMPLETED){
+                    return true;
+                }else{
+                    mensajeError="Contraseña incorrecta para la red "+netSSID+".";
+                    return false;
+                }
+
                 /*if (!wifi.isWifiEnabled()) {
                     wifi.setWifiEnabled(true);
                     try {
@@ -170,8 +179,7 @@ public class NetworkUtil {
                         ie.printStackTrace();
                     }
                 }*/
-                retorno=true;
-                break;
+
             }
         }
 
@@ -263,7 +271,7 @@ public class NetworkUtil {
         }
 */
 
-
+        mensajeError="No se detectó a la red "+netSSID+" cerca de usted.";
         return retorno;
     }
 
