@@ -115,13 +115,13 @@ public class EmbeddedPtcl {
 
     //TRAMA DE ESTADOS ADICIONALES
 
-    public static int ackBluetooth(byte[] buffer, int direccion, int opcCodepRincipal, int opcCodeSecundario, int indiceBomba, int flagError, int codigoError){
+    public static int ackWifi(byte[] buffer, int direccion, int opcCodePrincipal, int opcCodeSecundario, int indiceBomba, int flagError, int codigoError){
         int longitud=12;
         buffer[0]=0x02;
         buffer[1]=0x0C;
         buffer[2]=0x00;
         buffer[3]=(byte)direccion;
-        buffer[4]=(byte)opcCodepRincipal; //opcode principal
+        buffer[4]=(byte)opcCodePrincipal; //opcode principal
         buffer[5]=(byte)opcCodeSecundario;
         buffer[6]=(byte)indiceBomba;
         buffer[7]=0x00;

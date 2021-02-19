@@ -40,6 +40,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tcpsocketclient.ConnectTask;
+import com.example.tcpsocketclient.Entities.LayoutHoseEntity;
 import com.example.tcpsocketclient.Entities.TransactionEntity;
 import com.example.tcpsocketclient.R;
 import com.example.tcpsocketclient.TcpClient;
@@ -122,12 +123,15 @@ public class ClientSocketFragment extends Fragment {
     private NetworkUtil networkUtil;
 
     private String SSID="TP-LINK_AP_F2D8";
-    private String Password="6XGE8bA5Ka8oRqzhkfCm";
+    //private String SSID="EMBEDDED";
+    private String Password="123456789";
+    //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
     private ViewGroup layout;
 
     private int hijoLayout=0;
-    List<LinearLayout> inflaters= new ArrayList<>();
+    //List<LinearLayout> inflaters= new ArrayList<>();
+    List<LayoutHoseEntity> layoutsHose;
 
     //Trabajar con las mangueras
     LinearLayout ly_cuadrante;
@@ -137,6 +141,7 @@ public class ClientSocketFragment extends Fragment {
     LinearLayout ly_cuadrante_estado_abasteciendo2;
     TextView txt_ultimo_galon_p2;
     TextView txt_ultimo_ticket_p2;
+    TextView txt_nombre;
     ImageView iv_estado_abastecimiento;
     TextView   txt_ultimo_ticket;
     TextView   txt_Estado_abastecimiento;
@@ -195,7 +200,12 @@ public class ClientSocketFragment extends Fragment {
 
         //prueba con Handler y Socket
 
+
         layout = (ViewGroup) rootView.findViewById(R.id.LayoutContentHoses);
+
+        layoutsHose = new ArrayList<>();
+
+
         handlerSocket = new Handler() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             public void handleMessage(android.os.Message msg) {
@@ -438,11 +448,18 @@ public class ClientSocketFragment extends Fragment {
                 //TRAMA DE CONFIGURACION
                 case EmbeddedPtcl.b_ext_configuracion:
                     longitud = EmbeddedPtcl.aceptarTramaConfiguracion(bufferTransmision, bufferRecepcion[3],bufferRecepcion[4],bufferRecepcion[5]);
-                    Log.v("", "" + "Transmision   "+ byteArrayToHexString(bufferTransmision,0x0b));
                     Log.v("", "" + "Longitud   "+ longitud);
+                    Log.v("", "" + "Transmision   "+ byteArrayToHexString(bufferTransmision,0x0b));
                     break;
-
+                case EmbeddedPtcl.b_ext_cambio_estado:
+                    if(bufferRecepcion[5]!=0x03){
+                        longitud = EmbeddedPtcl.ackWifi(bufferTransmision,bufferRecepcion[3],bufferRecepcion[4],bufferRecepcion[5],bufferRecepcion[6],1,0);
+                        Log.v("", "" + "Longitud   "+ longitud);
+                        Log.v("", "" + "Transmision   " + byteArrayToHexString(bufferTransmision,0x0c));
+                    }
+                    break;
             }
+
 
             if (wifiSocket.isConnected()) {
                     new Thread(new Runnable() {
@@ -543,7 +560,7 @@ public class ClientSocketFragment extends Fragment {
                                 longitudTemp = (longitudTemp)|(((short)datoTemporal)<<8);
                                 //GUARDAR LONGITUD
                                 longitudTramaRecepcion = longitudTemp;
-                                Log.v("", "" + "Longitud   " + longitudTramaRecepcion);
+                                //Log.v("", "" + "Longitud   " + longitudTramaRecepcion);
                                 bufferRecepcion[indByte] = datoTemporal;
                                 indByte++;
                                 if((longitudTemp>500)||(longitudTemp<8)){
@@ -561,6 +578,7 @@ public class ClientSocketFragment extends Fragment {
                                 if(datoTemporal==0x03){
                                     hasPacket=true;
                                     pintarBytes = byteArrayToHexString(bufferRecepcion,longitudTemp);
+                                    Log.v("", "" + "Longitud   " + longitudTemp);
                                     Log.v("", "" + "Recepcion   " + pintarBytes);
                                     //mMessageListener.messageReceived(byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n");
                                     //mConnectedThread.write(EmbeddedPtcl.b_ext_configuracion);
@@ -606,6 +624,7 @@ public class ClientSocketFragment extends Fragment {
                     agregarImagenEstaciones();
                     clientTCPThread.write(EmbeddedPtcl.b_ext_configuracion); //0x06
 
+                    //inicializarMangueras();
                     /*try {
                         Thread.sleep(3000);
                     } catch (InterruptedException ie) {
@@ -619,7 +638,59 @@ public class ClientSocketFragment extends Fragment {
 
             //CAMBIO DE ESTADO
             case 0x01:
+                int indiceLayoutHose=0;
+                //Capturar idBomba
+                int[] arrayIdBomba = new int[1];
+                int idBomba = 0;
+                arrayIdBomba[0] = bufferRecepcion[7];
+                idBomba = Integer.parseInt(byteArrayToHexIntGeneral(arrayIdBomba,1));
 
+                for(int i=0;i<hoseEntities.size();i++ ){
+                    if(hoseEntities.get(i).idBomba==idBomba) {
+                        indiceLayoutHose = i;
+                        break;
+                    }
+                }
+
+                switch (bufferRecepcion[5]){
+                    case 0x01:
+                        //Cambio de estado
+                        if(hoseEntities.size() > 0){
+                            cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
+                        }
+                        clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
+                        break;
+                    case 0x02:
+                        //Estado actual de Mangueras
+                        clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
+                        //mConnectedThread.write(EmbeddedPtcl.b_ext_cambio_estado); //0x01
+                        break;
+                    case 0x03:
+                        //Cambio de Pulsos
+
+                        break;
+                    case 0x04:
+                        //Vehiculo Leido
+                        break;
+                    case 0x07:
+                        //Ultima transaccion
+
+                        if(hoseEntities.size() > 0){
+
+                            /*for(int j = 0; j< hoseEntities.size(); j++){
+                                if(hoseEntities.get(j).idBomba == idBomba){
+                                    //llenarDatosTransaccion(hoseEntities.get(j));
+                                    break;
+                                }
+                            }*/
+
+                            llenarDatosTransaccion(hoseEntities.get(indiceLayoutHose),indiceLayoutHose);
+                            inicializarMangueras();
+                        }
+                        clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
+                        //mConnectedThread.write(EmbeddedPtcl.b_ext_cambio_estado); //0x01
+                        break;
+                }
                 break;
 
             case 0x07:
@@ -645,7 +716,8 @@ public class ClientSocketFragment extends Fragment {
             c++;
         }
 
-        Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
+
+        //Log.v("NOMBRE EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaNombreEmbedded,tramaNombreEmbedded.length)));
         //**********************************************************
         //Capturar MAC TABLET
         int[] tramaMACTablet= new int[6];
@@ -654,7 +726,7 @@ public class ClientSocketFragment extends Fragment {
             tramaMACTablet[c] = bufferRecepcion[i];
             c++;
         }
-        Log.v("MAC TABLET EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACTablet,tramaMACTablet.length)));
+        //Log.v("MAC TABLET EMBEDDED", "" + hexToAscii(byteArrayToHexString(tramaMACTablet,tramaMACTablet.length)));
 
 
         //**********************************************************
@@ -666,7 +738,7 @@ public class ClientSocketFragment extends Fragment {
             c++;
         }
 
-        Log.v("CONTRASENA RED EMBEDDED", "" + hexToAscii(byteArrayToHexString(contrasenaHostEmbedded,contrasenaHostEmbedded.length)));
+        //Log.v("CONTRASENA RED EMBEDDED", "" + hexToAscii(byteArrayToHexString(contrasenaHostEmbedded,contrasenaHostEmbedded.length)));
 
 
         //**********************************************************
@@ -732,7 +804,6 @@ public class ClientSocketFragment extends Fragment {
 
     }
 
-
     private String byteArrayToHexIntGeneral(final int[] bytes, int cantidad) {
         int a = 0;
         double x = 0;
@@ -780,6 +851,30 @@ public class ClientSocketFragment extends Fragment {
         return sb.toString();
     }
 
+    private static int byteArrayToHexIntTicket(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        int indBuffer = 0;
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            //a=a<<8;
+            //a=a|((int)(0xFF&bytes[i]));
+            //if(i ==0){
+            //a = bytes[i];
+            //}
+            //if(i>0) {
+            //bytes[i] = (int) bytes[i] << 8;
+            //}
+            //a = a|(0xFF& bytes[i]);
+
+            a = a | (bytes[indBuffer])<<(i*8);
+            indBuffer++;
+        }
+        a=a&0x00FFFFFF;
+
+        return  a;
+    }
+
     public String armarMensajeMuestra(){
         String retorno = "";
 
@@ -797,18 +892,179 @@ public class ClientSocketFragment extends Fragment {
     }
 
 
+    public void llenarDatosTransaccion(TransactionEntity entity, int pIdBomba){
+        //**********************************************************
+        int contador = 0;
+
+        //**********************************************************
+        //EstadoActual
+        int[] tramaEstadoActual = new int[1];
+        contador = 0;
+        for(int i = 8; i<= 8;  i++){
+            tramaEstadoActual[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String estadoActual = byteArrayToHexString(tramaEstadoActual,tramaEstadoActual.length);
+        entity.setEstadoActual(estadoActual);
+        //**********************************************************
+        //Capturar Nro Transaccion
+        int[] tramaNroTransaccion = new int[3];
+        contador = 0;
+        for(int i = 9; i<= 11;  i++){
+            tramaNroTransaccion[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String nroTransaccion = "" + byteArrayToHexIntTicket(tramaNroTransaccion,tramaNroTransaccion.length);
+        entity.setNumeroTransaccion(nroTransaccion);
+        //**********************************************************
+        //Capturar Temperatura
+        int[] tramaTemperatura = new int[5];
+        contador = 0;
+        for(int i = 113; i<= 117;  i++){
+            tramaTemperatura[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String temperatura = "" + hexToAscii(byteArrayToHexString(tramaTemperatura,tramaTemperatura.length));
+        temperatura =  temperatura.substring(0,temperatura.length()-1);
+        entity.setTemperatura(temperatura);
+        //**********************************************************
+        //Capturar Placa
+        int[] tramaPlaca = new int[10];
+        contador = 0;
+        for(int i = 31; i<= 40;  i++){
+            tramaPlaca[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String placa = hexToAscii(byteArrayToHexString(tramaPlaca,tramaPlaca.length));
+        entity.setPlaca(placa);
+        //**********************************************************
+        //Capturar Volumen abastecido
+        int[] tramaVolumen = new int[9];
+        contador = 0;
+        for(int i = 104; i<= 112;  i++){
+            tramaVolumen[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String volumen = ""+ hexToAscii(byteArrayToHexString(tramaVolumen,tramaVolumen.length));
+        String[] parts = volumen.split("\\.");
+        if(parts.length > 1) {
+            volumen = parts[0] + "." + parts[1].substring(0,(0+entity.getCantidadDecimales()));
+        }
+
+        entity.setVolumen(volumen);
+        //**********************************************************
+        //Capturar Fecha Inicio
+        int[] tramaFechaInicio = new int[1];
+        tramaFechaInicio[0] = bufferRecepcion[12];
+        String dia = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+        tramaFechaInicio[0] = bufferRecepcion[13];
+        String mes = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+        tramaFechaInicio[0] = bufferRecepcion[14];
+        String anio = "20" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+        tramaFechaInicio[0] = bufferRecepcion[17];
+        String hora = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+        tramaFechaInicio[0] = bufferRecepcion[16];
+        String minuto = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+        tramaFechaInicio[0] = bufferRecepcion[15];
+        String segundo = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
+
+        String fechaInicio = dia + "/" + mes + "/" + anio + " ";
+        String horaInicio =  hora + ":" + minuto + ":" + segundo;
+        //fechaInicio = "" + hexToAscii(byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length));
+        entity.setFechaInicio(fechaInicio);
+        entity.setHoraInicio(horaInicio);
+        //**********************************************************
+        //Capturar Fecha Fin
+        int[] tramaFechaFin = new int[1];
+        tramaFechaFin[0] = bufferRecepcion[118];
+        String diaFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+        tramaFechaFin[0] = bufferRecepcion[119];
+        String mesFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+        tramaFechaFin[0] = bufferRecepcion[120];
+        String anioFin = "20" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+        tramaFechaFin[0] = bufferRecepcion[123];
+        String horaFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+        tramaFechaFin[0] = bufferRecepcion[122];
+        String minutoFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+        tramaFechaFin[0] = bufferRecepcion[121];
+        String segundoFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
+
+        String fechaFin = diaFin + "/" + mesFin + "/" + anioFin + " " ;
+        String horaFin1 = horaFin + ":" + minutoFin + ":" + segundoFin;
+        //fechaInicio = "" + hexToAscii(byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length));
+        entity.setFechaFin(fechaInicio);
+        entity.setHoraFin(horaFin1);
+
+        /*if(entity.getIdBomba() == 1){
+
+            txt_producto_m1.setText(entity.getNombreProducto());
+            txt_placa_m1.setText(entity.getPlaca());
+            txt_galones_m1.setText(entity.getVolumen());
+            txt_ultimo_galon_m1_p2.setText(entity.getVolumen());
+            txt_ultimo_ticket_m1.setText(entity.getNumeroTransaccion());
+            txt_ultimo_ticket_m1_p2.setText(entity.getNumeroTransaccion());
+
+        }else if(entity.getIdBomba() == 2){
+
+            txt_producto_m2.setText(entity.getNombreProducto());
+            txt_placa_m2.setText(entity.getPlaca());
+            txt_galones_m2.setText(entity.getVolumen());
+            txt_ultimo_galon_m2_p2.setText(entity.getVolumen());
+            txt_ultimo_ticket_m2.setText(entity.getNumeroTransaccion());
+            txt_ultimo_ticket_m2_p2.setText(entity.getNumeroTransaccion());
+
+        }else if(entity.getIdBomba() == 3){
+
+            txt_producto_m3.setText(entity.getNombreProducto());
+            txt_placa_m3.setText(entity.getPlaca());
+            txt_galones_m3.setText(entity.getVolumen());
+            txt_ultimo_galon_m3_p2.setText(entity.getVolumen());
+            txt_ultimo_ticket_m3.setText(entity.getNumeroTransaccion());
+            txt_ultimo_ticket_m3_p2.setText(entity.getNumeroTransaccion());
+
+        }else if(entity.getIdBomba() == 4){
+
+
+        }*/
+
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        txt_ultimo_galon_p2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_galon_p2);
+        txt_ultimo_ticket_p2= layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket_p2);
+
+        txt_producto.setText(entity.getNombreProducto());
+        txt_placa.setText(entity.getPlaca());
+        txt_galones.setText(entity.getVolumen());
+        txt_ultimo_galon_p2.setText(entity.getVolumen());
+        txt_ultimo_ticket.setText(entity.getNumeroTransaccion());
+        txt_ultimo_ticket_p2.setText(entity.getNumeroTransaccion());
+
+
+        //guardarTransaccionBD(entity);
+
+    }
+
     @SuppressLint("InlinedApi")
     private void agregarImagenEstaciones()
     {
         layout.removeAllViews();
-        inflaters = new ArrayList<>();
+        //inflaters = new ArrayList<>();
+        layoutsHose = new ArrayList<>();
         int id=0;
+        int idBomba=0;
         for(int i=0;i <hoseEntities.size();i++){
+            idBomba =hoseEntities.get(i).idBomba;
             LayoutInflater inflater = LayoutInflater.from(rootView.getContext());
             id = R.layout.layout_hose;
             LinearLayout hoseLayout = (LinearLayout) inflater.inflate(id, null, false);
+            txt_nombre = hoseLayout.findViewById(R.id.txt_nombre);
+            txt_nombre.append(String.valueOf(idBomba));
             layout.addView(hoseLayout,i);
-            inflaters.add(hoseLayout);
+            //inflaters.add(hoseLayout);
+            LayoutHoseEntity layoutHose = new LayoutHoseEntity(hoseLayout,idBomba);
+            layoutsHose.add(layoutHose);
             //layout.addView(hoseLayout);
         }
       //hijoLayout++;
@@ -816,20 +1072,54 @@ public class ClientSocketFragment extends Fragment {
 
     //Cambio de estados de Abastecimiento
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarEstadoSinAbastecimiento(int pIdBomba){
+
+        //TransactionEntity entity = obtenerBombaActual(pIdBomba);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
+        ly_cuadrante_estado_pausa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_pausa);
+        ly_cuadrante_estado_pausa2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_pausa2);
+        ly_cuadrante_estado_abasteciendo = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_abasteciendo);
+        ly_cuadrante_estado_abasteciendo2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_abasteciendo2);
+
+        txt_Estado_abastecimiento.setText("Disponible");
+        iv_estado_abastecimiento.setImageResource(R.drawable.ic_station_yellow_64);
+        txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_galones.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_ultimo_ticket.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_placa.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        txt_producto.setTextColor(getResources().getColor(R.color.md_yellow_assac));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_pausa));
+
+        ly_cuadrante_estado_pausa.setVisibility(View.VISIBLE);
+        ly_cuadrante_estado_pausa2.setVisibility(View.VISIBLE);
+
+        //txt_ultimo_ticket_m1_p2.setText(""+contadorTicketBomba1);
+        ly_cuadrante_estado_abasteciendo.setVisibility(View.GONE);
+        ly_cuadrante_estado_abasteciendo2.setVisibility(View.GONE);
+
+
+    }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoIniciaAbastecimiento(int pIdBomba){
-        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
-        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
-        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
-        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
-        ly_cuadrante_estado_pausa = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_pausa);
-        ly_cuadrante_estado_pausa2 = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_pausa2);
-        ly_cuadrante_estado_abasteciendo = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_abasteciendo);
-        ly_cuadrante_estado_abasteciendo2 = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante_estado_abasteciendo2);
-        txt_ultimo_galon_p2 = inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_galon_p2);
-        txt_ultimo_ticket_p2 = inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket_p2);
-        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
-        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
-        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
+        ly_cuadrante_estado_pausa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_pausa);
+        ly_cuadrante_estado_pausa2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_pausa2);
+        ly_cuadrante_estado_abasteciendo = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_abasteciendo);
+        ly_cuadrante_estado_abasteciendo2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante_estado_abasteciendo2);
+        txt_ultimo_galon_p2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_galon_p2);
+        txt_ultimo_ticket_p2 = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket_p2);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
 
 
         txt_Estado_abastecimiento.setText("Llamando");
@@ -852,13 +1142,13 @@ public class ClientSocketFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoAutorizarAbastecimiento(int pIdBomba){
-        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
-        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
-        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
-        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
-        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
-        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
-        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
 
             txt_Estado_abastecimiento.setText("Abasteciendo");
             iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
@@ -873,13 +1163,13 @@ public class ClientSocketFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoTerminaAbastecimiento(int pIdBomba){
-        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
-        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
-        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
-        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
-        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
-        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
-        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
 
 
         txt_Estado_abastecimiento.setText("Disponible");
@@ -896,13 +1186,13 @@ public class ClientSocketFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoSinFlujo(int pIdBomba){
 
-        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
-        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
-        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
-        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
-        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
-        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
-        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
 
         txt_Estado_abastecimiento.setText("No Flujo");
         iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
@@ -918,13 +1208,13 @@ public class ClientSocketFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoCierreHook(int pIdBomba){
 
-        txt_Estado_abastecimiento = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_Estado_abastecimiento);
-        iv_estado_abastecimiento = inflaters.get(pIdBomba).findViewById(R.id.iv_estado_abastecimiento);
-        txt_galones = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_galones);
-        txt_ultimo_ticket = (TextView) inflaters.get(pIdBomba).findViewById(R.id.txt_ultimo_ticket);
-        txt_placa = inflaters.get(pIdBomba).findViewById(R.id.txt_placa);
-        txt_producto = inflaters.get(pIdBomba).findViewById(R.id.txt_producto);
-        ly_cuadrante = inflaters.get(pIdBomba).findViewById(R.id.ly_cuadrante);
+        txt_Estado_abastecimiento = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_Estado_abastecimiento);
+        iv_estado_abastecimiento = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.iv_estado_abastecimiento);
+        txt_galones = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_ticket = (TextView) layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_ultimo_ticket);
+        txt_placa = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.txt_producto);
+        ly_cuadrante = layoutsHose.get(pIdBomba).inflater.findViewById(R.id.ly_cuadrante);
 
         txt_Estado_abastecimiento.setText("Cierre Hook");
         iv_estado_abastecimiento.setImageResource(R.drawable.ic_fuel_abasteciendo_64);
@@ -936,6 +1226,41 @@ public class ClientSocketFragment extends Fragment {
         ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_sin_flujo));
 
     }
+
+    public void inicializarMangueras(){
+
+        /*ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_apagado));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_apagado));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_apagado));
+        ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_apagado));*/
+
+        /*for(int i = 0; i< hoseEntities.size(); i++){
+            ly_cuadrante = inflaters.get(i).findViewById(R.id.ly_cuadrante);
+            ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_apagado));
+        }*/
+
+        for(int i = 0; i< hoseEntities.size(); i++){
+            ly_cuadrante = layoutsHose.get(i).inflater.findViewById(R.id.ly_cuadrante);
+            ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_pausa));
+        }
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambioEstado(int pIdBomba, int pEstadoActual){
+        pIdBomba--;
+        if(pEstadoActual == EmbeddedPtcl.v_estado_sin_abastecimiento){
+            cambiarEstadoSinAbastecimiento(pIdBomba);
+        } else if(pEstadoActual == EmbeddedPtcl.v_estado_inicia_abastecimiento){
+            cambiarEstadoIniciaAbastecimiento(pIdBomba);
+        }else if(pEstadoActual == EmbeddedPtcl.v_estado_autoriza_abastecimiento){
+            cambiarEstadoAutorizarAbastecimiento(pIdBomba);
+        } else if(pEstadoActual == EmbeddedPtcl.v_estado_termina_abastecimiento){
+            cambiarEstadoTerminaAbastecimiento(pIdBomba);
+        }
+
+    }
+
 
 
     @Override
