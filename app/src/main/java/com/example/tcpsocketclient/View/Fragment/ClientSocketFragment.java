@@ -97,7 +97,8 @@ public class ClientSocketFragment extends Fragment {
     private byte[] bufferTemporal = new byte[300];
     Handler handlerSocket;
     final int handlerState = 0;
-    public static  String SERVER_IP = "192.168.1.15";
+    //public static  String SERVER_IP = "192.168.1.118";
+    public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -122,8 +123,8 @@ public class ClientSocketFragment extends Fragment {
 
     private NetworkUtil networkUtil;
 
-    private String SSID="MOVISTAR_1B9E";
-    //private String SSID="EMBEDDED";
+    //private String SSID="TP-LINK_AP_F2D8";
+    private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -148,7 +149,7 @@ public class ClientSocketFragment extends Fragment {
     TextView   txt_galones;
     TextView   txt_placa;
     TextView   txt_producto;
-
+    String ultimoGalonBomba = "0.00";
 
     public ClientSocketFragment() {
         // Required empty public constructor
@@ -297,7 +298,6 @@ public class ClientSocketFragment extends Fragment {
             }
         });
     }
-
 
     public class ClientTCPThread extends AsyncTask<String, String, Boolean> {
         //public String SERVER_IP = "192.168.1.15";
@@ -505,7 +505,7 @@ public class ClientSocketFragment extends Fragment {
         return true;
     }
 
-    //Conexión a la red EMBEEDED
+    //CONEXIÓN A LA RED EMBEEDED
     private void connectWIFI(){
         validarWIFI = networkUtil.connectToHotspot(SSID,Password);
         /*try {
@@ -577,7 +577,7 @@ public class ClientSocketFragment extends Fragment {
                             if(indByte==longitudTemp){
                                 if(datoTemporal==0x03){
                                     hasPacket=true;
-                                    pintarBytes = byteArrayToHexString(bufferRecepcion,longitudTemp);
+                                    pintarBytes = byteArrayToHexString2(bufferRecepcion,longitudTemp);
                                     Log.v("", "" + "Longitud   " + longitudTemp);
                                     Log.v("", "" + "Recepcion   " + pintarBytes);
                                     //mMessageListener.messageReceived(byteArrayToHexString(bufferRecepcion,longitudTemp) + "\n");
@@ -669,10 +669,34 @@ public class ClientSocketFragment extends Fragment {
                         break;
                     case 0x03:
                         //Cambio de Pulsos
-
+                        /*switch (bufferRecepcion[9]){
+                            case 0x01:
+                                // FLUJO
+                                if(hoseEntities.size() > 0){
+                                    cambiarPulsos(indiceLayoutHose);
+                                }
+                                break;
+                            case 0x02:
+                                // INICIO NO FLUJO
+                                if(hoseEntities.size() > 0){
+                                    cambiarEstadoSinFlujo(indiceLayoutHose);
+                                }
+                                break;
+                            case 0x03:
+                                // NO FLUJO
+                                if(hoseEntities.size() > 0){
+                                    cambiarEstadoCierreHook(indiceLayoutHose);
+                                }
+                                break;
+                        }*/
                         break;
                     case 0x04:
                         //Vehiculo Leido
+                        if(hoseEntities.size() > 0){
+                            cambiarPlaca(indiceLayoutHose);
+                        }
+
+                        clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
                         break;
                     case 0x07:
                         //Ultima transaccion
@@ -703,9 +727,6 @@ public class ClientSocketFragment extends Fragment {
                 break;
         }
     }
-
-
-
 
     //CARGAR DATOS BOMBAS ACTIVAS RECIBIDAS
     public void llenarDatosConfiguracion(){
@@ -885,6 +906,7 @@ public class ClientSocketFragment extends Fragment {
 
 
     }
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambiarEstadoIniciaAbastecimiento(int indiceLayoutHose){
         txt_ultimo_ticket = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_ultimo_ticket);
@@ -1011,7 +1033,9 @@ public class ClientSocketFragment extends Fragment {
     public void llenarDatosTransaccion(TransactionEntity entity, int indiceLayoutHose){
         //**********************************************************
         int contador = 0;
+        Log.v("INICIO","**********************************************************");
 
+        Log.v("Bomba",String.valueOf(entity.getIdBomba()));
         //**********************************************************
         //EstadoActual
         int[] tramaEstadoActual = new int[1];
@@ -1020,10 +1044,12 @@ public class ClientSocketFragment extends Fragment {
             tramaEstadoActual[contador] = bufferRecepcion[i];
             contador++;
         }
-        String estadoActual = byteArrayToHexString(tramaEstadoActual,tramaEstadoActual.length);
+        //String estadoActual = byteArrayToHexString(tramaEstadoActual,tramaEstadoActual.length);
+        int estadoActual = Integer.parseInt(byteArrayToHexIntGeneral(tramaEstadoActual,1));
         entity.setEstadoActual(estadoActual);
 
-        //cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
+        Log.v("Estado",String.valueOf(entity.getEstadoActual()));
+        cambioEstado(indiceLayoutHose, estadoActual);
 
         //**********************************************************
         //Capturar Nro Transaccion
@@ -1033,8 +1059,9 @@ public class ClientSocketFragment extends Fragment {
             tramaNroTransaccion[contador] = bufferRecepcion[i];
             contador++;
         }
-        String nroTransaccion = "" + byteArrayToHexIntTicket(tramaNroTransaccion,tramaNroTransaccion.length);
+        String nroTransaccion = "" + byteArrayToHexInt(tramaNroTransaccion,tramaNroTransaccion.length);
         entity.setNumeroTransaccion(nroTransaccion);
+        Log.v("Nro. Transacción",entity.getNumeroTransaccion());
 
         //**********************************************************
         //Capturar Fecha Inicio
@@ -1057,6 +1084,62 @@ public class ClientSocketFragment extends Fragment {
         //fechaInicio = "" + hexToAscii(byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length));
         entity.setFechaInicio(fechaInicio);
         entity.setHoraInicio(horaInicio);
+        Log.v("Fecha Inicio",entity.getFechaInicio());
+        Log.v("Hora Inicio",entity.getHoraInicio());
+
+        //**********************************************************
+        //Capturar Turno
+        int[] tramaTurno = new int[2];
+        contador = 0;
+        for(int i = 18; i<= 19;  i++){
+            tramaTurno[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int turno = byteArrayToHexInt2(tramaTurno,tramaTurno.length);
+        entity.setTurno(turno);
+        Log.v("Turno",""+entity.getTurno());
+
+        //**********************************************************
+        //Numero de Tanque
+        int[] tramaNumeroTanque = new int[1];
+        contador = 0;
+        for(int i = 21; i<= 21;  i++){
+            tramaNumeroTanque[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int numeroTanque = Integer.parseInt(byteArrayToHexIntGeneral(tramaNumeroTanque,1));
+        entity.setNumeroTanque(numeroTanque);
+
+        Log.v("Tanque",""+entity.getNumeroTanque());
+
+        //**********************************************************
+        //Tipo de Vehiculo
+        int[] tramaTipoVehiculo = new int[1];
+        contador = 0;
+        for(int i = 22; i<= 22;  i++){
+            tramaTipoVehiculo[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int tipoVehiculo = Integer.parseInt(byteArrayToHexIntGeneral(tramaTipoVehiculo,1));
+        entity.setTipoVehiculo(tipoVehiculo);
+
+        Log.v("Tipo Vehiculo",""+entity.getTipoVehiculo());
+
+
+        //**********************************************************
+        //Capturar IdVehiculo
+        int[] tramaIdVehiculo = new int[8];
+        contador = 0;
+        for(int i = 23; i<= 30;  i++){
+            tramaIdVehiculo[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String IdVehiculo = hexToAscii(byteArrayToHexString(tramaIdVehiculo,tramaIdVehiculo.length));
+        entity.setIdVehiculo(IdVehiculo);
+
+        Log.v("IdVehiculo",entity.getIdVehiculo());
 
         //**********************************************************
         //Capturar Placa
@@ -1069,20 +1152,213 @@ public class ClientSocketFragment extends Fragment {
         String placa = hexToAscii(byteArrayToHexString(tramaPlaca,tramaPlaca.length));
         entity.setPlaca(placa);
 
-        //**********************************************************
-        //Capturar Temperatura
-        int[] tramaTemperatura = new int[5];
-        contador = 0;
-        for(int i = 113; i<= 117;  i++){
-            tramaTemperatura[contador] = bufferRecepcion[i];
-            contador++;
-        }
-        String temperatura = "" + hexToAscii(byteArrayToHexString(tramaTemperatura,tramaTemperatura.length));
-        temperatura =  temperatura.substring(0,temperatura.length()-1);
-        entity.setTemperatura(temperatura);
+        Log.v("Placa",entity.getPlaca());
 
         //**********************************************************
-        //Capturar Volumen abastecido
+        //Capturar Kilometro
+
+        int[] tramaKilometroParteEntera = new int[3];
+        contador = 0;
+        for(int i = 41; i<= 43;  i++){
+            tramaKilometroParteEntera[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int kilometroParteEntera = byteArrayToHexInt(tramaKilometroParteEntera,tramaKilometroParteEntera.length);
+
+        int[] tramaKilometroParteDecimal = new int[1];
+        contador = 0;
+        for(int i = 44; i<= 44;  i++){
+            tramaKilometroParteDecimal[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int kilometroParteDecimal = byteArrayToHexInt(tramaKilometroParteDecimal,tramaKilometroParteDecimal.length);
+
+        //double kilometro = kilometroParteEntera + kilometroParteDecimal*0.1;
+        double kilometro = Double.valueOf(kilometroParteEntera + "."+kilometroParteDecimal);
+
+
+        entity.setKilometraje(kilometro);
+
+        Log.v("Kilometro",""+kilometro);
+
+        //**********************************************************
+        //Capturar Horometro
+
+        int[] tramaHorometroParteEntera = new int[3];
+        contador = 0;
+        for(int i = 45; i<= 47;  i++){
+            tramaHorometroParteEntera[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int horometroParteEntera = byteArrayToHexInt(tramaHorometroParteEntera,tramaHorometroParteEntera.length);
+
+        int[] tramaHorometroParteDecimal = new int[1];
+        contador = 0;
+        for(int i = 48; i<= 48;  i++){
+            tramaKilometroParteDecimal[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        double horometro = 0.0;
+
+        if(tramaHorometroParteDecimal[0]==0xFF){
+            horometro = horometroParteEntera/10D;
+        }else{
+            int horometroParteDecimal = byteArrayToHexInt(tramaKilometroParteDecimal,tramaKilometroParteDecimal.length);
+            //horometro = horometroParteEntera + horometroParteDecimal*0.1;
+            horometro = Double.valueOf(horometroParteEntera + "."+horometroParteDecimal);
+        }
+
+        entity.setHorometro(horometro);
+
+        Log.v("Horometro",""+horometro);
+
+        //**********************************************************
+        //Capturar IdConductor
+        int[] tramaIdConductor = new int[8];
+        contador = 0;
+        for(int i = 49; i<= 56;  i++){
+            tramaIdConductor[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String IdConductor = hexToAscii(byteArrayToHexString(tramaIdConductor,tramaIdConductor.length));
+        entity.setIdConductor(IdConductor);
+
+        Log.v("IdConductor",entity.getIdConductor());
+
+        //**********************************************************
+        //Capturar IdOperador
+        int[] tramaIdOperador = new int[8];
+        contador = 0;
+        for(int i = 57; i<= 64;  i++){
+            tramaIdOperador[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String IdOperador = hexToAscii(byteArrayToHexString(tramaIdOperador,tramaIdOperador.length));
+        entity.setIdOperador(IdOperador);
+
+        Log.v("IdOperador",entity.getIdOperador());
+
+        //**********************************************************
+        //Tipo de Transacción
+        int[] tramaTipoTransaccion = new int[1];
+        contador = 0;
+        for(int i = 65; i<= 65;  i++){
+            tramaTipoTransaccion[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int tipoTransaccion = Integer.parseInt(byteArrayToHexIntGeneral(tramaTipoTransaccion,1));
+        entity.setTipoTransaccion(tipoTransaccion);
+
+        Log.v("Tipo Transacción",""+entity.getTipoTransaccion());
+
+        //**********************************************************
+        //Capturar Latitud
+        int[] tramaLatitud = new int[12];
+        contador = 0;
+        for(int i = 66; i<= 77;  i++){
+            tramaLatitud[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String latitud = hexToAscii(byteArrayToHexString(tramaLatitud,tramaLatitud.length));
+        entity.setLatitud(latitud);
+
+        Log.v("Latitud",entity.getLatitud());
+
+        //**********************************************************
+        //Capturar Longitud
+        int[] tramaLongitud = new int[12];
+        contador = 0;
+        for(int i = 78; i<= 89;  i++){
+            tramaLongitud[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String longitud = hexToAscii(byteArrayToHexString(tramaLongitud,tramaLongitud.length));
+        entity.setLongitud(longitud);
+
+        Log.v("Longitud",entity.getLongitud());
+
+        //**********************************************************
+        //Capturar Tipo Error Pre-Seteo
+        int[] tramaTipoErrorPreseteo = new int[1];
+        contador = 0;
+        for(int i = 90; i<= 90;  i++){
+            tramaTipoErrorPreseteo[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int tipoErrorPreseteo= Integer.parseInt(byteArrayToHexIntGeneral(tramaTipoErrorPreseteo,1));
+        entity.setTipoErrorPreseteo(tipoErrorPreseteo);
+
+        Log.v("Tipo Error Preseteo",""+entity.getTipoErrorPreseteo());
+
+        //**********************************************************
+        //Capturar Volumen Autorizado
+        int[] tramaVolumenAutorizado = new int[2];
+        contador = 0;
+        for(int i = 91; i<= 92;  i++){
+            tramaVolumenAutorizado[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int volumenAutorizado = byteArrayToHexInt2(tramaVolumenAutorizado,tramaVolumenAutorizado.length);
+        entity.setVolumenAutorizado(volumenAutorizado);
+        Log.v("Volumen Autorizado",""+entity.getVolumenAutorizado());
+
+        //**********************************************************
+        //Capturar Volumen Aceptado
+        int[] tramaVolumenAceptado = new int[2];
+        contador = 0;
+        for(int i = 93; i<= 94;  i++){
+            tramaVolumenAceptado[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int volumenAceptado = byteArrayToHexInt2(tramaVolumenAceptado,tramaVolumenAceptado.length);
+        entity.setVolumenAceptado(volumenAceptado);
+        Log.v("Volumen Aceptado",""+entity.getVolumenAceptado());
+
+        //**********************************************************
+        //Capturar Código Cliente
+        int[] tramaCodigoCliente = new int[2];
+        contador = 0;
+        for(int i = 100; i<= 101;  i++){
+            tramaCodigoCliente[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        int codigoCliente = byteArrayToHexInt2(tramaCodigoCliente,tramaCodigoCliente.length);
+        entity.setCodigoCliente(codigoCliente);
+        Log.v("Codigo Cliente",""+entity.getCodigoCliente());
+
+        //**********************************************************
+        //Capturar codigo area
+        int[] tramaCodigoArea = new int[1];
+        contador = 0;
+        for(int i = 102; i<= 102;  i++){
+            tramaCodigoArea[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int CodigoArea = Integer.parseInt(byteArrayToHexIntGeneral(tramaCodigoArea,1));
+        entity.setCodigoArea(CodigoArea);
+
+        Log.v("Codigo Area",""+entity.getCodigoArea());
+
+        //**********************************************************
+        //Capturar tipo TAG
+        int[] tramaTipoTAG = new int[1];
+        contador = 0;
+        for(int i = 103; i<= 103;  i++){
+            tramaTipoTAG[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int tipoTAG = Integer.parseInt(byteArrayToHexIntGeneral(tramaTipoTAG,1));
+        entity.setTipoTag(tipoTAG);
+
+        Log.v("Tipo TAG",""+entity.getTipoTag());
+
+        //**********************************************************
+        //Capturar Volumen Abastecido
         int[] tramaVolumen = new int[9];
         contador = 0;
         for(int i = 104; i<= 112;  i++){
@@ -1096,6 +1372,22 @@ public class ClientSocketFragment extends Fragment {
         }
 
         entity.setVolumen(volumen);
+
+        Log.v("Volumen Abastecido",entity.getVolumen());
+
+        //**********************************************************
+        //Capturar Temperatura
+        int[] tramaTemperatura = new int[5];
+        contador = 0;
+        for(int i = 113; i<= 117;  i++){
+            tramaTemperatura[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String temperatura = "" + hexToAscii(byteArrayToHexString(tramaTemperatura,tramaTemperatura.length));
+        temperatura =  temperatura.substring(0,temperatura.length()-1);
+        entity.setTemperatura(temperatura);
+
+        Log.v("Temperatura",entity.getTemperatura());
 
         //**********************************************************
         //Capturar Fecha Fin
@@ -1119,6 +1411,23 @@ public class ClientSocketFragment extends Fragment {
         entity.setFechaFin(fechaFin);
         entity.setHoraFin(horaFin1);
 
+        Log.v("Fecha Fin",entity.getFechaFin());
+        Log.v("Hora Fin",entity.getHoraFin());
+
+        //**********************************************************
+        //Capturar Tipo de Cierre
+        int[] tramaTipoCierre = new int[1];
+        contador = 0;
+        for(int i = 124; i<= 124;  i++){
+            tramaTipoCierre[contador] = bufferRecepcion[i];
+            contador++;
+        }
+
+        int tipoCierre = Integer.parseInt(byteArrayToHexIntGeneral(tramaTipoCierre,1));
+        entity.setTipoCierre(tipoCierre);
+
+        Log.v("Tipo Cierre",""+entity.getTipoCierre());
+
         txt_galones = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_galones);
         txt_ultimo_ticket = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_ultimo_ticket);
         txt_placa = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_placa);
@@ -1138,6 +1447,57 @@ public class ClientSocketFragment extends Fragment {
 
     }
 
+    //CAMBIAR PLACA ACTUAL
+    public void cambiarPlaca(int indiceLayoutHose){
+        //Capturar Nombre Host Bluetooth
+        int[] tramaPlaca = new int[10];
+        String placa = "";
+        int c = 0;
+        for(int i = 9; i<= 18;  i++){
+            tramaPlaca[c] = bufferRecepcion[i];
+            c++;
+        }
+        placa = hexToAscii(byteArrayToHexString(tramaPlaca,tramaPlaca.length));
+
+        int contador;
+
+        int[] tramaAutorizadoPlaca = new int[1];
+        contador = 0;
+        for(int i = 8; i<= 8;  i++){
+            tramaAutorizadoPlaca[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        //String estadoActual = byteArrayToHexString(tramaEstadoActual,tramaEstadoActual.length);
+        int autorizado = Integer.parseInt(byteArrayToHexIntGeneral(tramaAutorizadoPlaca,1));
+
+        Log.v("Autorizado",""+ autorizado);
+
+        txt_placa = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_placa);
+        txt_producto = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_producto);
+
+        txt_placa.setText(placa);
+        txt_producto.setText(hoseEntities.get(indiceLayoutHose).getNombreProducto());
+    }
+
+    //cambiar pulsos
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cambiarPulsos(int indiceLayoutHose){
+        cambiarEstadoAutorizarAbastecimiento(indiceLayoutHose);
+
+        txt_galones = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_galones);
+
+        int[] bufferGalones = new int[300];
+        bufferGalones[0] = bufferRecepcion[10];
+        bufferGalones[1] = bufferRecepcion[11];
+        bufferGalones[2] = bufferRecepcion[12];
+        Log.v("TEXT 1", "" + byteArrayToHexString(bufferGalones,3));
+        Log.v("INT 1", "" + byteArrayToHexIntGeneral(bufferGalones,3));
+        //og.v("INT 1", "" + byteArrayToHexString(bufferRecepcion,bufferRecepcion.));
+        ultimoGalonBomba = ""+ (byteArrayToHexIntB(bufferGalones,3));
+        txt_galones.setText(ultimoGalonBomba);
+
+    }
+
     private String byteArrayToHexIntGeneral(final int[] bytes, int cantidad) {
         int a = 0;
         double x = 0;
@@ -1149,6 +1509,43 @@ public class ClientSocketFragment extends Fragment {
         a=a&0x00FFFFFF;
 
         return "" + a;
+    }
+
+    private static int byteArrayToHexInt(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        int indBuffer = 0;
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            //a=a<<8;
+            //a=a|((int)(0xFF&bytes[i]));
+            //if(i ==0){
+            //a = bytes[i];
+            //}
+            //if(i>0) {
+            //bytes[i] = (int) bytes[i] << 8;
+            //}
+            //a = a|(0xFF& bytes[i]);
+
+            a = a | (bytes[indBuffer])<<(i*8);
+            indBuffer++;
+        }
+        a=a&0x00FFFFFF;
+
+        return  a;
+    }
+
+    private static int byteArrayToHexInt2(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        //for(byte b : bytes){
+        for(int i = cantidad-1; i>=0; i--){
+            a=a<<8;
+            a=a|((int)(0xFF&bytes[i]));
+        }
+        a=a&0x00FFFFFF;
+
+        return  a;
     }
 
     private String hexToAscii(String hexStr) {
@@ -1185,28 +1582,31 @@ public class ClientSocketFragment extends Fragment {
         return sb.toString();
     }
 
-    private static int byteArrayToHexIntTicket(final int[] bytes, int cantidad) {
-        int a = 0;
-        double x = 0;
-        int indBuffer = 0;
+    private static String byteArrayToHexString2(final int[] bytes, int cantidad) {
+        StringBuilder sb = new StringBuilder();
         //for(byte b : bytes){
         for(int i = 0; i<cantidad; i++){
-            //a=a<<8;
-            //a=a|((int)(0xFF&bytes[i]));
-            //if(i ==0){
-            //a = bytes[i];
-            //}
-            //if(i>0) {
-            //bytes[i] = (int) bytes[i] << 8;
-            //}
-            //a = a|(0xFF& bytes[i]);
+            sb.append(String.format("[%02x]", bytes[i]&0xff));
+            //sb.append((char)(0xFF&bytes[i]));
+        }
+        return sb.toString();
+    }
 
-            a = a | (bytes[indBuffer])<<(i*8);
-            indBuffer++;
+    private static String byteArrayToHexIntB(final int[] bytes, int cantidad) {
+        int a = 0;
+        double x = 0;
+        //for(byte b : bytes){
+        for(int i = 0; i<cantidad; i++){
+            a=a<<8;
+            a=a|((int)(0xFF&bytes[i]));
         }
         a=a&0x00FFFFFF;
-
-        return  a;
+        x = a/10.0;
+        //a = a/10;
+        //DecimalFormat form = new DecimalFormat("0.00");
+        //return String.format("%.2f", a);
+        return "" + x;//form.format(x);
+        //return ""+a;
     }
 
     public String armarMensajeMuestra(){
@@ -1224,13 +1624,6 @@ public class ClientSocketFragment extends Fragment {
 
         return retorno;
     }
-
-
-
-
-
-
-
 
     public void inicializarMangueras(){
 
@@ -1250,10 +1643,6 @@ public class ClientSocketFragment extends Fragment {
         }
 
     }
-
-
-
-
 
     @Override
     public void onDestroy() {

@@ -7,8 +7,8 @@
     android:layout_weight="1"
     android:orientation="vertical"
     android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado"
-    android:layout_marginLeft="4dp"
-    android:layout_marginRight="4dp">
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,8 +16,8 @@
         android:orientation="horizontal"
         android:layout_marginBottom="0dp"
         android:layout_marginTop="5dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp">
+        android:layout_marginLeft="7dp"
+        android:layout_marginRight="7dp">
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -30,7 +30,7 @@
                 android:src="@drawable/ic_state_station_green_64"></ImageView>
         </LinearLayout>
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical">
@@ -38,7 +38,7 @@
                 android:id="@+id/txt_nombre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="M0"
+                android:text="M"
                 android:textSize="15sp"
                 android:gravity="center"></TextView>
 
@@ -241,7 +241,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:text="último Ticket"
+                    android:text="Último Ticket"
                     android:textSize="22sp"
                     android:layout_gravity="center"></TextView>
             </LinearLayout>

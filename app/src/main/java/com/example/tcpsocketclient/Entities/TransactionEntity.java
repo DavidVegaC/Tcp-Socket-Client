@@ -12,14 +12,18 @@ public class TransactionEntity implements Serializable {
     public int numeroBomba;
     public String nombreManguera;
 
-    public String estadoActual;
+    //public String estadoActual;
+    public int estadoActual;
     public int cantidadDecimales;
 
     public int idProducto;
     public String nombreProducto;
 
     public String numeroTransaccion;
-    public String tipoTransaccion;
+
+    //public String tipoTransaccion;
+    public int tipoTransaccion;
+
     public String fechaInicio;
     public String horaInicio;
     public String fechaFin;
@@ -28,13 +32,24 @@ public class TransactionEntity implements Serializable {
     public String temperatura;
 
     public String idVehiculo;
-    public String tipoVehiculo;
-    public String placa;
-    public String kilometraje;
-    public String horometro;
 
-    public String turno;
-    public String numeroTanque;
+    //public String tipoVehiculo;
+    public int tipoVehiculo;
+
+    public String placa;
+
+
+    //public String kilometraje;
+    //public String horometro;
+    public Double kilometraje;
+    public Double horometro;
+
+
+    //public String turno;
+    public int turno;
+
+    //public String numeroTanque;
+    public int numeroTanque;
 
 
     public String idConductor;
@@ -43,13 +58,22 @@ public class TransactionEntity implements Serializable {
 
     public String latitud;
     public String longitud;
-    public String tipoErrorPreseteo;
-    public String volumenAutorizado;
-    public String volumenAceptado;
-    public String codigoCliente;
-    public String codigoArea;
-    public String tipoTag;
-    public String tipoCierre;
+    //public String tipoErrorPreseteo;
+    //public String volumenAutorizado;
+    //public String volumenAceptado;
+    //public String codigoCliente;
+    public int tipoErrorPreseteo;
+    public int volumenAutorizado;
+    public int volumenAceptado;
+    public int codigoCliente;
+
+    //public String codigoArea;
+    //public String tipoTag;
+    //public String tipoCierre;
+    public int codigoArea;
+    public int tipoTag;
+    public int tipoCierre;
+
     public String crc;
     public String comentario;
 
@@ -100,11 +124,11 @@ public class TransactionEntity implements Serializable {
         this.nombreManguera = nombreManguera;
     }
 
-    public String getEstadoActual() {
+    public int getEstadoActual() {
         return estadoActual;
     }
 
-    public void setEstadoActual(String estadoActual) {
+    public void setEstadoActual(int estadoActual) {
         this.estadoActual = estadoActual;
     }
 
@@ -140,11 +164,11 @@ public class TransactionEntity implements Serializable {
         this.numeroTransaccion = numeroTransaccion;
     }
 
-    public String getTipoTransaccion() {
+    public int getTipoTransaccion() {
         return tipoTransaccion;
     }
 
-    public void setTipoTransaccion(String tipoTransaccion) {
+    public void setTipoTransaccion(int tipoTransaccion) {
         this.tipoTransaccion = tipoTransaccion;
     }
 
@@ -204,11 +228,11 @@ public class TransactionEntity implements Serializable {
         this.idVehiculo = idVehiculo;
     }
 
-    public String getTipoVehiculo() {
+    public int getTipoVehiculo() {
         return tipoVehiculo;
     }
 
-    public void setTipoVehiculo(String tipoVehiculo) {
+    public void setTipoVehiculo(int tipoVehiculo) {
         this.tipoVehiculo = tipoVehiculo;
     }
 
@@ -220,35 +244,35 @@ public class TransactionEntity implements Serializable {
         this.placa = placa;
     }
 
-    public String getKilometraje() {
+    public Double getKilometraje() {
         return kilometraje;
     }
 
-    public void setKilometraje(String kilometraje) {
+    public void setKilometraje(Double kilometraje) {
         this.kilometraje = kilometraje;
     }
 
-    public String getHorometro() {
+    public Double getHorometro() {
         return horometro;
     }
 
-    public void setHorometro(String horometro) {
+    public void setHorometro(Double horometro) {
         this.horometro = horometro;
     }
 
-    public String getTurno() {
+    public int getTurno() {
         return turno;
     }
 
-    public void setTurno(String turno) {
+    public void setTurno(int turno) {
         this.turno = turno;
     }
 
-    public String getNumeroTanque() {
+    public int getNumeroTanque() {
         return numeroTanque;
     }
 
-    public void setNumeroTanque(String numeroTanque) {
+    public void setNumeroTanque(int numeroTanque) {
         this.numeroTanque = numeroTanque;
     }
 
@@ -284,59 +308,59 @@ public class TransactionEntity implements Serializable {
         this.longitud = longitud;
     }
 
-    public String getTipoErrorPreseteo() {
+    public int getTipoErrorPreseteo() {
         return tipoErrorPreseteo;
     }
 
-    public void setTipoErrorPreseteo(String tipoErrorPreseteo) {
+    public void setTipoErrorPreseteo(int tipoErrorPreseteo) {
         this.tipoErrorPreseteo = tipoErrorPreseteo;
     }
 
-    public String getVolumenAutorizado() {
+    public int getVolumenAutorizado() {
         return volumenAutorizado;
     }
 
-    public void setVolumenAutorizado(String volumenAutorizado) {
+    public void setVolumenAutorizado(int volumenAutorizado) {
         this.volumenAutorizado = volumenAutorizado;
     }
 
-    public String getVolumenAceptado() {
+    public int getVolumenAceptado() {
         return volumenAceptado;
     }
 
-    public void setVolumenAceptado(String volumenAceptado) {
+    public void setVolumenAceptado(int volumenAceptado) {
         this.volumenAceptado = volumenAceptado;
     }
 
-    public String getCodigoCliente() {
+    public int getCodigoCliente() {
         return codigoCliente;
     }
 
-    public void setCodigoCliente(String codigoCliente) {
+    public void setCodigoCliente(int codigoCliente) {
         this.codigoCliente = codigoCliente;
     }
 
-    public String getCodigoArea() {
+    public int getCodigoArea() {
         return codigoArea;
     }
 
-    public void setCodigoArea(String codigoArea) {
+    public void setCodigoArea(int codigoArea) {
         this.codigoArea = codigoArea;
     }
 
-    public String getTipoTag() {
+    public int getTipoTag() {
         return tipoTag;
     }
 
-    public void setTipoTag(String tipoTag) {
+    public void setTipoTag(int tipoTag) {
         this.tipoTag = tipoTag;
     }
 
-    public String getTipoCierre() {
+    public int getTipoCierre() {
         return tipoCierre;
     }
 
-    public void setTipoCierre(String tipoCierre) {
+    public void setTipoCierre(int tipoCierre) {
         this.tipoCierre = tipoCierre;
     }
 
