@@ -60,6 +60,7 @@ public class NavigationFragment {
                     break;
             }
             ft.replace(containerView, newFragment, tag);
+            ft.setReorderingAllowed(true);
             if (backStack) {
                 ft.addToBackStack("oldFragment");
             }

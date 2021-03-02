@@ -23,7 +23,8 @@
         android:theme="@style/AppThemeAssac">
 
         <activity android:name=".View.Activity.SplashActivity"
-            android:screenOrientation="landscape">
+            android:screenOrientation="landscape"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

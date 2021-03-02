@@ -70,3 +70,62 @@ BOMBA 4
 
 
 
+switch (messagesCount)
+            {
+                case 0:
+                    String TramaRespuesta = "028c000106010000454d42454444454400000000000000005465038b7aa8313233343536373839000004010203040101024739302d312020202020473930202020202020200201024739302d322020202020473930202020202020200301024739302d312020202020473930202020202020200401024739302d31202020202047393020202020202020db03";
+                    byte[] bufferenvioERRORR = StringToByteArray(TramaRespuesta);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR);
+                    messagesCount++;
+                    break;
+                case 1:
+                    String TramaRespuesta2 = "020c00010102010200000f03";
+                    byte[] bufferenvioERRORR2 = StringToByteArray(TramaRespuesta2);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR2);
+                    messagesCount++;
+                    break;
+                case 2:
+                    String TramaRespuesta3 = "02810001010701020003000019022141071201000200045f126c9b138107e04854343535202020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000042362e39303030303030303030303019022150071201e8759d03";
+                    byte[] bufferenvioERRORR3 = StringToByteArray(TramaRespuesta3);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR3);
+                    messagesCount++;
+                    break;
+                case 3:
+                    String TramaRespuesta4 = "020c00010102020300000d03";
+                    byte[] bufferenvioERRORR4 = StringToByteArray(TramaRespuesta4);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR4);
+                    messagesCount++;
+                    break;
+                case 4:
+                    String TramaRespuesta5 = "02810001010702030001000019022112071201000300045f126c9b138107e04854343535202020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000042372e313030303030303030303030190221190712019d38b703";
+                    byte[] bufferenvioERRORR5 = StringToByteArray(TramaRespuesta5);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR5);
+                    messagesCount++;
+                    break;
+                case 5:
+                    String TramaRespuesta6 = "020c00010102030400000b03";
+                    byte[] bufferenvioERRORR6 = StringToByteArray(TramaRespuesta6);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR6);
+                    messagesCount++;
+                    break;
+                case 6:
+                    String TramaRespuesta7= "0281000101070304000700001902213956150100040004698c6c9b138107e04238572d38313120202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e363237303157000000000000000000000000004231392e303030303030303030303019022153561501fe724e03";
+                    byte[] bufferenvioERRORR7 = StringToByteArray(TramaRespuesta7);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR7);
+                    messagesCount++;
+                    break;
+                case 7:
+                    String TramaRespuesta8 = "020c00010102000100000d03";
+                    byte[] bufferenvioERRORR8 = StringToByteArray(TramaRespuesta8);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR8);
+                    messagesCount++;
+                    break;
+                case 8:
+                    String TramaRespuesta9 = "028100010107000100060000190221134412010001000200000000503a393c4143303031302020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000041372e30303030303030303030303019022130441201437caf03";
+                    byte[] bufferenvioERRORR9 = StringToByteArray(TramaRespuesta9);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR9);
+                    messagesCount++;
+                    break;
+
+            }
+
