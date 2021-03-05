@@ -118,12 +118,13 @@
                     android:id="@+id/txt_placa"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="-"
-                    android:textSize="18sp"
-                    android:textColor="@color/md_yellow_assac"
-                    android:textStyle="bold"
+                    android:gravity="center"
                     android:textAlignment="center"
-                    android:gravity="center"></TextView>
+                    android:text="-"
+                    android:textColor="@color/md_yellow_assac"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    ></TextView>
             </LinearLayout>
         </LinearLayout>
 
@@ -324,7 +325,7 @@
                     android:layout_height="match_parent"
                     android:text="0"
                     android:textColor="@color/md_yellow_assac"
-                    android:textSize="20sp"
+                    android:textSize="23sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
                     android:gravity="center"></TextView>

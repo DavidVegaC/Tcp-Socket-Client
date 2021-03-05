@@ -109,7 +109,7 @@ public class NetworkUtil {
 
     public boolean connectToHotspot(String netSSID, String netPass) {
         boolean retorno=false;
-        WifiConfiguration wifiConf = new WifiConfiguration();
+        /*WifiConfiguration wifiConf = new WifiConfiguration();
         wifiConf.SSID = "\"" + netSSID + "\"";
         wifiConf.preSharedKey = "\"" + netPass + "\"";
         wifiConf.hiddenSSID = true;
@@ -123,7 +123,7 @@ public class NetworkUtil {
         wifiConf.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
         wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
         wifiConf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-        wifiConf.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wifiConf.allowedProtocols.set(WifiConfiguration.Protocol.WPA);*/
 
         wifi = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -145,7 +145,7 @@ public class NetworkUtil {
             return true;
         }
 
-        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        /*if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             retorno=false;
         }
 
@@ -164,24 +164,24 @@ public class NetworkUtil {
                     ie.printStackTrace();
                 }
 
-                if(wifi.getConnectionInfo().getSupplicantState() == SupplicantState.COMPLETED){
+                if(wifi.getConnectionInfo().equals("\"" + netSSID + "\"")&&wifi.getConnectionInfo().getSupplicantState() == SupplicantState.COMPLETED){
                     return true;
                 }else{
                     mensajeError="Contraseña incorrecta para la red "+netSSID+".";
                     return false;
                 }
 
-                /*if (!wifi.isWifiEnabled()) {
-                    wifi.setWifiEnabled(true);
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                }*/
+                //if (!wifi.isWifiEnabled()) {
+                    //wifi.setWifiEnabled(true);
+                    //try {
+                    //    Thread.sleep(2000);
+                    //} catch (InterruptedException ie) {
+                    //    ie.printStackTrace();
+                    //}
+                //}
 
-            }
-        }
+            //}
+        }*/
 
 
 
@@ -271,7 +271,8 @@ public class NetworkUtil {
         }
 */
 
-        mensajeError="No se detectó a la red "+netSSID+" cerca de usted.";
+        //mensajeError="No se detectó a la red "+netSSID+" cerca de usted.";
+        mensajeError="No se detectó conexión a la red WIFI "+netSSID+"." ;
         return retorno;
     }
 

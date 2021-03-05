@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment;
 import android.os.Handler;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.Layout;
 import android.text.format.Formatter;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import static android.Manifest.permission_group.LOCATION;
 
@@ -98,8 +100,8 @@ public class ClientSocketFragment extends Fragment {
     private byte[] bufferTemporal = new byte[300];
     Handler handlerSocket;
     final int handlerState = 0;
-    public static  String SERVER_IP = "192.168.1.15";
-    //public static  String SERVER_IP = "192.168.4.22";
+    //public static  String SERVER_IP = "192.168.1.126";
+    public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -112,6 +114,7 @@ public class ClientSocketFragment extends Fragment {
 
 
     private boolean validarWIFI = true;
+    private boolean conexSocket=true;
     private int tiempoEspera=0;
 
 
@@ -124,8 +127,8 @@ public class ClientSocketFragment extends Fragment {
 
     private NetworkUtil networkUtil;
 
-    private String SSID="MOVISTAR_1B9E";
-    //private String SSID="EMBEDDED";
+    //private String SSID="TP-LINK_AP_F2D8";
+    private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -187,9 +190,10 @@ public class ClientSocketFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         initComponent();
-
         clientTCPThread =new ClientTCPThread();
-        clientTCPThread.execute();
+        //executor.execute(clientTCPThread.execute());
+        clientTCPThread.execute("");
+
         //actualizarTiempo();
         //crearConexionWIFISocket();
     }
@@ -316,107 +320,190 @@ public class ClientSocketFragment extends Fragment {
         protected Boolean doInBackground(String... message) {
             boolean result = false;
 
-            while(validarWIFI){
+            while(conexSocket) {
+                try {
+                    Thread.sleep(tiempoEspera);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                tiempoEspera=0000;
+                while (validarWIFI) {
+                    try {
+                        Thread.sleep(tiempoEspera);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    tiempoEspera = 5000;
+                    if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(getContext(),
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+                        if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(getContext(),
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            validateLocation();
+                            //validarWIFI=false;
+                        }
+                    } else {
+                        validateLocation();
+                        //validarWIFI=false;
+                        //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
+                    }
+                }
+
+                /*if(!validarWIFI) {
+                    Toast.makeText(getActivity(), "Se validaron los campos.", Toast.LENGTH_LONG).show();
+                }*/
+
+                //return true;
+
+                try {
+                    SocketAddress sockaddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
+                    wifiSocket = new Socket();
+
+                    Log.d("TCP Client", "C: Connecting...");
+                    wifiSocket.connect(sockaddr, 5000);
+
+                    mostrarMensajeUsuario("Se conectó al Socket con éxito.");
+                    //conexSocket=false;
+                    try {
+                        Log.d("TCP Client", "C: Connectado..");
+                        int bytes;
+                        //sends the message to the server
+                        mBufferOut = wifiSocket.getOutputStream();
+
+                        //receives the message which the server sends back
+                        mBufferIn = wifiSocket.getInputStream();
+
+                        //in this while the client listens for the messages sent by the server
+                        int tamBytes = 0;
+                        while (mRun) {
+                            bufferTemporal = new byte[300];
+                            if (!wifiSocket.isClosed()) {
+                                bytes = 0;
+                                //mBufferIn.read(lenBytes, 0, 10);
+                                bytes = mBufferIn.read(bufferTemporal);
+
+                                handlerSocket.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
+
+                            }
+
+                        }
+                    } catch (IOException e) {
+                        //e.printStackTrace();
+                        //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
+                        result = true;
+                        mRun = false;
+                        //Toast.makeText(rootView.getContext(), "Se perdió la conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                        mostrarMensajeUsuario("Se perdió la conexión con el socket del servidor");
+                        Log.d("TCP Client", "C: Se perdió conexión");
+                        validarWIFI=true;
+                        conexSocket=true;
+                        return result;
+                    } catch (Exception e) {
+                        result = true;
+                        Log.e("TCP", "S: Error", e);
+                    } finally {
+                        //the socket must be closed. It is not possible to reconnect to this socket
+                        // after it is closed, which means a new socket instance has to be created.
+                        mRun = false;
+                        wifiSocket.close();
+                        wifiSocket=null;
+                        mBufferIn=null;
+                        mBufferOut=null;
+
+                        //wifiSocket.disconnect();
+                        //this.socket=null;
+                        //SocketManager.instance = null;
+
+                    }
+                } catch (UnknownHostException e) {
+                    //e.printStackTrace();
+                    Log.e("TCP", e.getMessage(), e);
+                } catch (IOException e) {
+                    //e.printStackTrace();
+                    //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
+                    //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                    mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
+                    Log.d("TCP Client", "C: No se pudo conectar");
+                    tiempoEspera=2000;
+                    conexSocket=true;
+                } catch (Exception e) {
+                    Log.e("TCP", "C: Error", e);
+                }finally {
+                    validarWIFI=true;
+                }
+            }
+
+            /*tiempoEspera=0000;
+            while(conexSocket){
+
                 try{
                     Thread.sleep(tiempoEspera);
                 }catch (InterruptedException e){
                     e.printStackTrace();
                 }
-
-                tiempoEspera=6000;
-                if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(getContext(),
-                                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                    if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(getContext(),
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                        validateLocation();
-                        //validarWIFI=false;
-                    }
-                } else {
-                    validateLocation();
-                    //validarWIFI=false;
-                    //boolean connect= connectToHotspot("EMBEDDED DEMO", "123456789");
-                }
-            }
-
-            /*if(!validarWIFI) {
-                Toast.makeText(getActivity(), "Se validaron los campos.", Toast.LENGTH_LONG).show();
-            }*/
-
-            //return true;
-            try {
-
-                Log.d("TCP Client", "C: Connecting...");
-                SocketAddress sockaddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
-                wifiSocket = new Socket();
-                wifiSocket.connect(sockaddr, 5000);
-
-                Log.d("TCP Client", "C: Connectado..");
-                mostrarMensajeUsuario("Se conectó al Socket con éxito.");
+                tiempoEspera=4000;
                 try {
-                    int bytes;
-                    //sends the message to the server
-                    mBufferOut = wifiSocket.getOutputStream();
+                    SocketAddress sockaddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
+                    wifiSocket = new Socket();
+                    Log.d("TCP Client", "C: Connecting...");
+                    wifiSocket.connect(sockaddr, 5000);
 
-                    //receives the message which the server sends back
-                    mBufferIn = wifiSocket.getInputStream();
+                    Log.d("TCP Client", "C: Connectado..");
+                    mostrarMensajeUsuario("Se conectó al Socket con éxito.");
+                    try {
+                        int bytes;
+                        //sends the message to the server
+                        mBufferOut = wifiSocket.getOutputStream();
 
-                    //in this while the client listens for the messages sent by the server
-                    int tamBytes=0;
-                    while (mRun) {
-                        //mBufferIn = new DataInputStream(socket.getInputStream());
-                    /*mServerMessage = mBufferIn.readLine();
+                        //receives the message which the server sends back
+                        mBufferIn = wifiSocket.getInputStream();
 
-                    Log.d("RESPONSE FROM SERVER", "S: Received Message: '" + mServerMessage + "'");*/
-                        bufferTemporal = new byte[300];
-                        if(!wifiSocket.isClosed()) {
-                            bytes=0;
-                            //mBufferIn.read(lenBytes, 0, 10);
-                            bytes=mBufferIn.read(bufferTemporal);
-                        /*String readMessage = new String(bufferTemporal, 0, bytes);
-                        Log.v("buffer", "" + readMessage);
-                        // Send the obtained bytes to the UI Activity via handler
-                        mensaje=byteArrayToHexString(bufferTemporal,bytes);
-                        Log.v("", "" + mensaje);
-                        */
-                            handlerSocket.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
+                        //in this while the client listens for the messages sent by the server
+                        int tamBytes=0;
+                        while (mRun) {
+                            bufferTemporal = new byte[300];
+                            if(!wifiSocket.isClosed()) {
+                                bytes=0;
+                                //mBufferIn.read(lenBytes, 0, 10);
+                                bytes=mBufferIn.read(bufferTemporal);
 
+                                handlerSocket.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
 
-                            //mMessageListener.messageReceived(mensaje);
+                            }
 
                         }
-
+                    }  catch (IOException e) {
+                        //e.printStackTrace();
+                        //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
+                        result = true;
+                        mRun=false;
+                        //Toast.makeText(rootView.getContext(), "Se perdió la conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                        mostrarMensajeUsuario("Se perdió la conexión con el socket del servidor");
+                    }catch (Exception e) {
+                        result = true;
+                        Log.e("TCP", "S: Error", e);
+                    } finally {
+                        //the socket must be closed. It is not possible to reconnect to this socket
+                        // after it is closed, which means a new socket instance has to be created.
+                        wifiSocket.close();
+                        mRun=false;
                     }
-                }  catch (IOException e) {
+
+                } catch (UnknownHostException e) {
+                    //e.printStackTrace();
+                    Log.e("TCP", e.getMessage(), e);
+                } catch (IOException e) {
                     //e.printStackTrace();
                     //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
-                    result = true;
-                    mRun=false;
-                    //Toast.makeText(rootView.getContext(), "Se perdió la conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
-                    mostrarMensajeUsuario("Se perdió la conexión con el socket del servidor");
-                }catch (Exception e) {
-                    result = true;
-                    Log.e("TCP", "S: Error", e);
-                } finally {
-                    //the socket must be closed. It is not possible to reconnect to this socket
-                    // after it is closed, which means a new socket instance has to be created.
-                    wifiSocket.close();
-                    mRun=false;
+                    //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
+                    mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
+                }catch(Exception e){
+                    Log.e("TCP", "C: Error", e);
                 }
-
-            } catch (UnknownHostException e) {
-                //e.printStackTrace();
-                Log.e("TCP", e.getMessage(), e);
-            } catch (IOException e) {
-                //e.printStackTrace();
-                //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
-                //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
-                mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
-            }catch(Exception e){
-                Log.e("TCP", "C: Error", e);
-            }
+            }*/
 
             return result;
         }
@@ -434,10 +521,16 @@ public class ClientSocketFragment extends Fragment {
             if (result) {
                 Log.i("AsyncTask", "onPostExecute: Completed with an Error.");
                 //Toast.makeText(rootView.getContext(), , Toast.LENGTH_SHORT).show();
-                mostrarMensajeUsuario("No se logro establecer conexión con el socket del servidor");
+                //mostrarMensajeUsuario("No se logro establecer conexión con el socket del servidor");
+                //clientTCPThread.doInBackground();
+                //new ClientTCPThread().execute();
+                validarWIFI=true;
+                crearNuevoSocket();
+
             } else {
                 Log.i("AsyncTask", "onPostExecute: Completed.");
             }
+
         }
 
 
@@ -476,10 +569,23 @@ public class ClientSocketFragment extends Fragment {
                 //timerNoComunicacion(1500);
         }
 
+        @Override
+        protected void onCancelled() {
+            clientTCPThread=null;
+        }
+    }
 
+    public void crearNuevoSocket(){
+        //clientTCPThread.cancel(true);
+        clientTCPThread = null;
 
+        if (clientTCPThread == null) {
+            clientTCPThread = new ClientTCPThread();
+            clientTCPThread.execute("");
+        }
 
     }
+
 
     //Verificación de Ubicación
     private void validateLocation(){
@@ -898,12 +1004,15 @@ public class ClientSocketFragment extends Fragment {
         txt_producto.setTextColor(getResources().getColor(R.color.md_yellow_assac));
         ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_pausa));
 
+        //txt_galones.setText(hoseEntities.get(indiceLayoutHose).getVolumen());
+
         ly_cuadrante_estado_pausa.setVisibility(View.VISIBLE);
         ly_cuadrante_estado_pausa2.setVisibility(View.VISIBLE);
 
         //txt_ultimo_ticket_m1_p2.setText(""+contadorTicketBomba1);
         ly_cuadrante_estado_abasteciendo.setVisibility(View.GONE);
         ly_cuadrante_estado_abasteciendo2.setVisibility(View.GONE);
+
 
 
     }
@@ -969,13 +1078,17 @@ public class ClientSocketFragment extends Fragment {
         txt_Estado_abastecimiento = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_Estado_abastecimiento);
         iv_estado_abastecimiento = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.iv_estado_abastecimiento);
         txt_galones = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_galones);
+        txt_ultimo_galon_p2 = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_ultimo_galon_p2);
         txt_ultimo_ticket = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_ultimo_ticket);
         txt_placa = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_placa);
         txt_producto = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_producto);
         ly_cuadrante = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.ly_cuadrante);
 
 
+
         txt_Estado_abastecimiento.setText("Disponible");
+        txt_galones.setText(hoseEntities.get(indiceLayoutHose).getVolumen());
+        txt_ultimo_galon_p2.setText(hoseEntities.get(indiceLayoutHose).getVolumen());
         iv_estado_abastecimiento.setImageResource(R.drawable.ic_station_yellow_64);
         txt_Estado_abastecimiento.setTextColor(getResources().getColor(R.color.md_yellow_assac));
         txt_galones.setTextColor(getResources().getColor(R.color.md_yellow_assac));
@@ -983,6 +1096,8 @@ public class ClientSocketFragment extends Fragment {
         txt_placa.setTextColor(getResources().getColor(R.color.md_yellow_assac));
         txt_producto.setTextColor(getResources().getColor(R.color.md_yellow_assac));
         ly_cuadrante.setBackground(getResources().getDrawable(R.drawable.bg_para_cuadrante_manguera_estado_pausa));
+
+
 
     }
 
@@ -1202,7 +1317,7 @@ public class ClientSocketFragment extends Fragment {
 
         double horometro = 0.0;
 
-        if(tramaHorometroParteDecimal[0]==0xFF){
+        if(tramaHorometroParteDecimal[0]==255){
             horometro = horometroParteEntera/10D;
         }else{
             int horometroParteDecimal = byteArrayToHexInt(tramaKilometroParteDecimal,tramaKilometroParteDecimal.length);
@@ -1521,7 +1636,8 @@ public class ClientSocketFragment extends Fragment {
         txt_producto = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_producto);
 
         txt_placa.setText(placa);
-        txt_placa.setGravity(Gravity.CENTER);
+        //txt_placa.setGravity(Gravity.CENTER);
+        //txt_placa.setTextAlignment(Layout.Alignment.ALIGN_CENTER);
         txt_producto.setText(hoseEntities.get(indiceLayoutHose).getNombreProducto());
         txt_producto.setGravity(Gravity.CENTER);
     }
@@ -1560,7 +1676,7 @@ public class ClientSocketFragment extends Fragment {
         Log.v("Volumen Abastecido",volumen);
 
         txt_galones.setText(volumen);
-
+        hoseEntities.get(indiceLayoutHose).setVolumen(volumen);
     }
 
     private String byteArrayToHexIntGeneral(final int[] bytes, int cantidad) {
