@@ -73,6 +73,8 @@
             android:gravity="center"></TextView>
     </LinearLayout>
 
+
+    <!-- Placa y Galones - Abastenciendo GONE-->
     <LinearLayout
         android:id="@+id/ly_cuadrante_estado_abasteciendo"
         android:layout_width="match_parent"
@@ -84,20 +86,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginLeft="3dp"
-            android:layout_marginRight="3dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
             android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                android:orientation="vertical">
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="Placa"
-                    android:textSize="20sp"
-                    android:layout_gravity="center"></TextView>
+                    android:textSize="18sp"
+                    android:gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
 
@@ -106,7 +107,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp">
+            android:layout_marginRight="2dp"
+            >
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -114,17 +116,18 @@
                 android:orientation="vertical">
                 <TextView
                     android:id="@+id/txt_placa"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="-"
-                    android:textSize="25dp"
+                    android:textSize="18sp"
                     android:textColor="@color/md_yellow_assac"
                     android:textStyle="bold"
-                    android:layout_gravity="center"></TextView>
+                    android:textAlignment="center"
+                    android:gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
+        <!--<LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -140,7 +143,7 @@
                     android:layout_height="wrap_content"
                     android:text="Galones"
                     android:gravity="center_horizontal"
-                    android:textSize="23dp"></TextView>
+                    android:textSize="18sp"></TextView>
             </LinearLayout>
 
             <TextView
@@ -150,12 +153,66 @@
                 android:text="00.0"
                 android:fontFamily="@font/ds_digib"
                 android:textColor="@color/md_yellow_assac"
-                android:gravity="center_horizontal"
-                android:textSize="50sp"></TextView>
+                android:layout_gravity="center"
+                android:textSize="30sp"></TextView>
+        </LinearLayout>-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                >
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Galones"
+                    android:textSize="18sp"
+                    android:gravity="center"></TextView>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                >
+
+                <TextView
+                    android:id="@+id/txt_galones"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textAlignment="center"
+                    android:text="0.00"
+                    android:fontFamily="@font/ds_digib"
+                    android:textColor="@color/md_yellow_assac"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    ></TextView>
+            </LinearLayout>
+
+
         </LinearLayout>
 
     </LinearLayout>
 
+    <!-- Imagen de disponible-->
     <LinearLayout
         android:id="@+id/ly_cuadrante_estado_pausa"
         android:layout_width="match_parent"
@@ -171,6 +228,7 @@
             ></ImageView>
     </LinearLayout>
 
+    <!-- Producto y Último Ticket   GONE-->
     <LinearLayout
         android:id="@+id/ly_cuadrante_estado_abasteciendo2"
         android:layout_width="match_parent"
@@ -189,13 +247,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                >
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="Producto"
-                    android:textSize="22sp"
-                    android:layout_gravity="center"></TextView>
+                    android:textSize="18sp"
+                    android:gravity="center"></TextView>
             </LinearLayout>
 
         </LinearLayout>
@@ -206,22 +264,23 @@
             android:orientation="horizontal"
             android:layout_marginLeft="2dp"
             android:layout_marginRight="2dp"
-            android:layout_marginBottom="2dp">
+            >
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                >
 
                 <TextView
                     android:id="@+id/txt_producto"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="-"
                     android:textColor="@color/md_yellow_assac"
-                    android:textSize="25sp"
-                    android:textStyle="bold"></TextView>
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textAlignment="center"></TextView>
             </LinearLayout>
 
         </LinearLayout>
@@ -239,11 +298,11 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="Último Ticket"
-                    android:textSize="22sp"
-                    android:layout_gravity="center"></TextView>
+                    android:textSize="18sp"
+                    android:gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
 
@@ -253,7 +312,7 @@
             android:orientation="horizontal"
             android:layout_marginLeft="2dp"
             android:layout_marginRight="2dp"
-            android:layout_marginBottom="2dp">
+            >
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -261,18 +320,20 @@
                 android:orientation="vertical">
                 <TextView
                     android:id="@+id/txt_ultimo_ticket"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="0"
                     android:textColor="@color/md_yellow_assac"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_gravity="center"></TextView>
+                    android:textAlignment="center"
+                    android:gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
 
+    <!--Datos Visibles En pausa  -->
     <LinearLayout
         android:id="@+id/ly_cuadrante_estado_pausa2"
         android:layout_width="match_parent"
@@ -301,16 +362,16 @@
             android:background="@drawable/bg_para_cuadrante_manguera_estado_apagado">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                >
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="Galones"
                     android:layout_gravity="center"
                     android:textSize="20sp"
-                    android:gravity="center_vertical"></TextView>
+                    android:gravity="center"></TextView>
             </LinearLayout>
 
         </LinearLayout>
@@ -327,13 +388,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                >
 
                 <TextView
                     android:id="@+id/txt_ultimo_galon_p2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="0.00"
                     android:fontFamily="@font/ds_digib"
                     android:textColor="@color/md_yellow_assac"
@@ -356,11 +417,11 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="Ticket"
-                    android:textSize="20sp"
-                    android:layout_gravity="center"></TextView>
+                    android:textSize="23sp"
+                    android:gravity="center"></TextView>
             </LinearLayout>
         </LinearLayout>
 
@@ -378,13 +439,13 @@
                 android:orientation="vertical">
                 <TextView
                     android:id="@+id/txt_ultimo_ticket_p2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="0"
                     android:textColor="@color/md_yellow_assac"
                     android:textSize="23sp"
                     android:textStyle="bold"
-                    android:layout_gravity="center"></TextView>
+                    android:gravity="center"></TextView>
             </LinearLayout>
 
         </LinearLayout>

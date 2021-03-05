@@ -178,3 +178,178 @@ V/: Longitud   12
 V/: Transmision   [02][0c][00][01][01][02][03][00][01][00][0e][03]
 V/: Longitud   129
     Recepcion   [02][81][00][01][01][07][03][04][00][13][00][00][02][03][21][14][46][17][01][00][04][00][04][69][8c][6c][9b][13][81][07][e0][42][38][57][2d][38][31][31][20][20][20][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][00][01][31][32][30][34][2e][38][31][37][38][35][30][53][30][37][37][30][34][2e][36][32][37][30][31][57][00][00][00][00][00][00][00][00][00][00][00][00][00][42][31][38][2e][39][30][30][30][30][30][30][30][30][30][30][02][03][21][44][46][17][01][c4][86][a6][03]
+
+
+switch (messagesCount)
+            {
+                case 0:
+                    String TramaRespuesta = "028c000106010000454d42454444454400000000000000005465038b7aa8313233343536373839000004010203040101024739302d312020202020473930202020202020200201024739302d322020202020473930202020202020200301024739302d312020202020473930202020202020200401024739302d31202020202047393020202020202020db03";
+                    byte[] bufferenvioERRORR = StringToByteArray(TramaRespuesta);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR);
+                    messagesCount++;
+                    break;
+                case 1:
+                    String TramaRespuesta2 = "020c00010102010200000f03";
+                    byte[] bufferenvioERRORR2 = StringToByteArray(TramaRespuesta2);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR2);
+                    messagesCount++;
+                    break;
+                case 2:
+                    String TramaRespuesta3 = "02810001010701020003000019022141071201000200045f126c9b138107e04854343535202020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000042362e39303030303030303030303019022150071201e8759d03";
+                    byte[] bufferenvioERRORR3 = StringToByteArray(TramaRespuesta3);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR3);
+                    messagesCount++;
+                    break;
+                case 3:
+                    String TramaRespuesta4 = "020c00010102020300000d03";
+                    byte[] bufferenvioERRORR4 = StringToByteArray(TramaRespuesta4);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR4);
+                    messagesCount++;
+                    break;
+                case 4:
+                    String TramaRespuesta5 = "02810001010702030001000019022112071201000300045f126c9b138107e04854343535202020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000042372e313030303030303030303030190221190712019d38b703";
+                    byte[] bufferenvioERRORR5 = StringToByteArray(TramaRespuesta5);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR5);
+                    messagesCount++;
+                    break;
+                case 5:
+                    String TramaRespuesta6 = "020c00010102030400000b03";
+                    byte[] bufferenvioERRORR6 = StringToByteArray(TramaRespuesta6);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR6);
+                    messagesCount++;
+                    break;
+                case 6:
+                    String TramaRespuesta7= "0281000101070304000700001902213956150100040004698c6c9b138107e04238572d38313120202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e363237303157000000000000000000000000004231392e303030303030303030303019022153561501fe724e03";
+                    byte[] bufferenvioERRORR7 = StringToByteArray(TramaRespuesta7);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR7);
+                    messagesCount++;
+                    break;
+                case 7:
+                    String TramaRespuesta8 = "020c00010102000100000d03";
+                    byte[] bufferenvioERRORR8 = StringToByteArray(TramaRespuesta8);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR8);
+                    messagesCount++;
+                    break;
+                case 8:
+                    String TramaRespuesta9 = "028100010107000100060000190221134412010001000200000000503a393c4143303031302020202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e3632373031570000000000000000000000000041372e30303030303030303030303019022130441201437caf03";
+                    byte[] bufferenvioERRORR9 = StringToByteArray(TramaRespuesta9);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR9);
+                    messagesCount++;
+                    break;
+                case 9:
+                    String TramaRespuesta10 = "020c00010101030402000a03";
+                    byte[] bufferenvioERRORR10 = StringToByteArray(TramaRespuesta10);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR10);
+                    messagesCount++;
+                    break;
+                case 10:
+                    String TramaRespuesta11 = "023b00010104030402485434353520202020205f126c9b000000000401010100010101010101000000000000000000000000000000000000008f03";
+                    byte[] bufferenvioERRORR11 = StringToByteArray(TramaRespuesta11);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR11);
+                    messagesCount++;
+                    break;
+                case 11:
+                    String TramaRespuesta12 = "020c00010101030403020903";
+                    byte[] bufferenvioERRORR12 = StringToByteArray(TramaRespuesta12);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR12);
+                    messagesCount++;
+                    break;
+                case 12:
+                    String TramaRespuesta13 = "020c00010102030403000803";
+                    byte[] bufferenvioERRORR13 = StringToByteArray(TramaRespuesta13);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR13);
+                    messagesCount++;
+                    break;
+
+                case 13:
+                    String TramaRespuesta14 = "0213000101030304030100000c312e32300603";
+                    byte[] bufferenvioERRORR14 = StringToByteArray(TramaRespuesta14);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR14);
+                    messagesCount++;
+                    break;
+                case 14:
+                    String TramaRespuesta15 = "02130001010303040301000019322e35301703";
+                    byte[] bufferenvioERRORR15 = StringToByteArray(TramaRespuesta15);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR15);
+                    messagesCount++;
+                    break;
+                case 15:
+                    String TramaRespuesta16 = "02130001010303040301000035352e33303a03";
+                    byte[] bufferenvioERRORR16 = StringToByteArray(TramaRespuesta16);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR16);
+                    messagesCount++;
+                    break;
+                case 16:
+                    String TramaRespuesta17 = "02130001010303040301000051382e31305103";
+                    byte[] bufferenvioERRORR17 = StringToByteArray(TramaRespuesta17);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR17);
+                    messagesCount++;
+                    break;
+                case 17:
+                    String TramaRespuesta18 = "02130001010303040301000063392e39306a03";
+                    byte[] bufferenvioERRORR18 = StringToByteArray(TramaRespuesta18);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR18);
+                    messagesCount++;
+                    break;
+                case 18:
+                    String TramaRespuesta19 = "0214000101030304030100007331312e35304803";
+                    byte[] bufferenvioERRORR19 = StringToByteArray(TramaRespuesta19);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR19);
+                    messagesCount++;
+                    break;
+                case 19:
+                    String TramaRespuesta20 = "0214000101030304030100008331332e3130be03";
+                    byte[] bufferenvioERRORR20 = StringToByteArray(TramaRespuesta20);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR20);
+                    messagesCount++;
+                    break;
+                case 20:
+                    String TramaRespuesta21 = "0214000101030304030100009b31352e3530a403";
+                    byte[] bufferenvioERRORR21 = StringToByteArray(TramaRespuesta21);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR21);
+                    messagesCount++;
+                    break;
+                case 21:
+                    String TramaRespuesta22 = "021400010103030403010000b631382e32308303";
+                    byte[] bufferenvioERRORR22 = StringToByteArray(TramaRespuesta22);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR22);
+                    messagesCount++;
+                    break;
+                case 22:
+                    String TramaRespuesta23 = "021400010103030403010000bd31382e39308303";
+                    byte[] bufferenvioERRORR23 = StringToByteArray(TramaRespuesta23);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR23);
+                    messagesCount++;
+                    break;
+                case 23:
+                    String TramaRespuesta24 = "020c00010103030403020b03";
+                    byte[] bufferenvioERRORR24 = StringToByteArray(TramaRespuesta24);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR24);
+                    messagesCount++;
+                    break;
+                case 24:
+                    String TramaRespuesta25 = "020c00010101030404030f03";
+                    byte[] bufferenvioERRORR25 = StringToByteArray(TramaRespuesta25);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR25);
+                    messagesCount++;
+                    break;
+                case 25:
+                    String TramaRespuesta26 = "020c00010101030400040c03";
+                    byte[] bufferenvioERRORR26 = StringToByteArray(TramaRespuesta26);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR26);
+                    messagesCount++;
+                    break;
+                case 26:
+                    String TramaRespuesta27 = "020c00010102030400000b03";
+                    byte[] bufferenvioERRORR27 = StringToByteArray(TramaRespuesta27);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR27);
+                    messagesCount++;
+                    break;
+                case 27:
+                    String TramaRespuesta28 = "0281000101070304001300000203211446170100040004698c6c9b138107e04238572d38313120202000000000000000000000000000000000000000000000000001313230342e3831373835305330373730342e363237303157000000000000000000000000004231382e393030303030303030303002032144461701c486a603";
+                    byte[] bufferenvioERRORR28 = StringToByteArray(TramaRespuesta28);
+                    m_Servidor.DistributeMessage(bufferenvioERRORR28);
+                    messagesCount++;
+                    break;
+            } 
+

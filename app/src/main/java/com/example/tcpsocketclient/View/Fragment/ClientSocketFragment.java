@@ -29,6 +29,7 @@ import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,8 +98,8 @@ public class ClientSocketFragment extends Fragment {
     private byte[] bufferTemporal = new byte[300];
     Handler handlerSocket;
     final int handlerState = 0;
-    //public static  String SERVER_IP = "192.168.1.118";
-    public static  String SERVER_IP = "192.168.4.22";
+    public static  String SERVER_IP = "192.168.1.15";
+    //public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -123,8 +124,8 @@ public class ClientSocketFragment extends Fragment {
 
     private NetworkUtil networkUtil;
 
-    //private String SSID="TP-LINK_AP_F2D8";
-    private String SSID="EMBEDDED";
+    private String SSID="MOVISTAR_1B9E";
+    //private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -663,13 +664,13 @@ public class ClientSocketFragment extends Fragment {
                         break;
                     case 0x02:
                         //Estado actual de Mangueras
-                        cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
+                        //cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
                         clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
                         //mConnectedThread.write(EmbeddedPtcl.b_ext_cambio_estado); //0x01
                         break;
                     case 0x03:
                         //Cambio de Pulsos
-                        /*switch (bufferRecepcion[9]){
+                        switch (bufferRecepcion[9]){
                             case 0x01:
                                 // FLUJO
                                 if(hoseEntities.size() > 0){
@@ -688,7 +689,7 @@ public class ClientSocketFragment extends Fragment {
                                     cambiarEstadoCierreHook(indiceLayoutHose);
                                 }
                                 break;
-                        }*/
+                        }
                         break;
                     case 0x04:
                         //Vehiculo Leido
@@ -1459,24 +1460,70 @@ public class ClientSocketFragment extends Fragment {
         }
         placa = hexToAscii(byteArrayToHexString(tramaPlaca,tramaPlaca.length));
 
-        int contador;
 
         int[] tramaAutorizadoPlaca = new int[1];
-        contador = 0;
-        for(int i = 8; i<= 8;  i++){
-            tramaAutorizadoPlaca[contador] = bufferRecepcion[i];
-            contador++;
+        for(int i = 28; i<= 28;  i++){
+            tramaAutorizadoPlaca[0] = bufferRecepcion[i];
         }
         //String estadoActual = byteArrayToHexString(tramaEstadoActual,tramaEstadoActual.length);
         int autorizado = Integer.parseInt(byteArrayToHexIntGeneral(tramaAutorizadoPlaca,1));
-
         Log.v("Autorizado",""+ autorizado);
+
+        int[] tramaPrefixValido = new int[1];
+        for(int i = 29; i<= 29;  i++){
+            tramaPrefixValido[0] = bufferRecepcion[i];
+        }
+        int prefix = Integer.parseInt(byteArrayToHexIntGeneral(tramaPrefixValido,1));
+        Log.v("Prefix",""+ prefix);
+
+        int[] tramaProductoCorrecto = new int[1];
+        for(int i = 30; i<= 30;  i++){
+            tramaProductoCorrecto[0] = bufferRecepcion[i];
+        }
+        int producto = Integer.parseInt(byteArrayToHexIntGeneral(tramaProductoCorrecto,1));
+
+        Log.v("Producto",""+ producto);
+
+        int[] tramaBloqueado = new int[1];
+        for(int i = 31; i<= 31;  i++){
+            tramaBloqueado[0] = bufferRecepcion[i];
+        }
+        int bloqueado = Integer.parseInt(byteArrayToHexIntGeneral(tramaBloqueado,1));
+
+        Log.v("Bloqueado",""+ bloqueado);
+
+        int[] tramaRegistrado = new int[1];
+        for(int i = 32; i<= 32;  i++){
+            tramaRegistrado[0] = bufferRecepcion[i];
+        }
+        int registrado = Integer.parseInt(byteArrayToHexIntGeneral(tramaRegistrado,1));
+
+        Log.v("Registrado",""+ registrado);
+
+        int[] tramaHabilitado = new int[1];
+        for(int i = 33; i<= 33;  i++){
+            tramaHabilitado[0] = bufferRecepcion[i];
+        }
+        int habilitado = Integer.parseInt(byteArrayToHexIntGeneral(tramaHabilitado,1));
+
+        Log.v("Habilitado",""+ habilitado);
+
+        int[] tramaExpiracionValida = new int[1];
+        for(int i = 34; i<= 34;  i++){
+            tramaExpiracionValida[0] = bufferRecepcion[i];
+        }
+        int expiracionValida = Integer.parseInt(byteArrayToHexIntGeneral(tramaExpiracionValida,1));
+
+        Log.v("Expiracion Valida",""+ expiracionValida);
+
 
         txt_placa = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_placa);
         txt_producto = layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_producto);
 
         txt_placa.setText(placa);
+        txt_placa.setGravity(Gravity.CENTER);
         txt_producto.setText(hoseEntities.get(indiceLayoutHose).getNombreProducto());
+        txt_producto.setGravity(Gravity.CENTER);
     }
 
     //cambiar pulsos
@@ -1486,15 +1533,33 @@ public class ClientSocketFragment extends Fragment {
 
         txt_galones = (TextView) layoutsHose.get(indiceLayoutHose).inflater.findViewById(R.id.txt_galones);
 
-        int[] bufferGalones = new int[300];
+        /*int[] bufferGalones = new int[300];
         bufferGalones[0] = bufferRecepcion[10];
         bufferGalones[1] = bufferRecepcion[11];
         bufferGalones[2] = bufferRecepcion[12];
         Log.v("TEXT 1", "" + byteArrayToHexString(bufferGalones,3));
         Log.v("INT 1", "" + byteArrayToHexIntGeneral(bufferGalones,3));
         //og.v("INT 1", "" + byteArrayToHexString(bufferRecepcion,bufferRecepcion.));
-        ultimoGalonBomba = ""+ (byteArrayToHexIntB(bufferGalones,3));
-        txt_galones.setText(ultimoGalonBomba);
+        ultimoGalonBomba = ""+ (byteArrayToHexIntB(bufferGalones,3));*/
+
+        //**********************************************************
+        //Capturar Volumen Abastecido
+        int contador;
+        int[] tramaVolumen = new int[(longitudTramaRecepcion-2)-13];
+        contador = 0;
+        for(int i = 13; i<= longitudTramaRecepcion-3;  i++){
+            tramaVolumen[contador] = bufferRecepcion[i];
+            contador++;
+        }
+        String volumen = ""+ hexToAscii(byteArrayToHexString(tramaVolumen,tramaVolumen.length));
+        String[] parts = volumen.split("\\.");
+        if(parts.length > 1) {
+            volumen = parts[0] + "." + parts[1].substring(0,(0+hoseEntities.get(indiceLayoutHose).getCantidadDecimales()));
+        }
+
+        Log.v("Volumen Abastecido",volumen);
+
+        txt_galones.setText(volumen);
 
     }
 
