@@ -15,6 +15,7 @@ import com.example.tcpsocketclient.Util.CustomAnimation;
 import com.example.tcpsocketclient.Util.NavigationFragment;
 import com.example.tcpsocketclient.View.Fragment.ClientSocketFragment;
 import com.example.tcpsocketclient.View.Fragment.ServerSocketFragment;
+import com.example.tcpsocketclient.View.Fragment.TicketFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
@@ -24,7 +25,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //ADDITIONAL CODE
     private LinearLayout btnEstacion;
     private LinearLayout btnDuplicadoTicket;
-    private ClientSocketFragment clientSocketFragment = new ClientSocketFragment();
+    private ClientSocketFragment clientSocketFragment = null;
+    private TicketFragment ticketFragment = null;
 
     BottomNavigationView bottomNavigationView;
 
@@ -46,13 +48,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        btnDuplicadoTicket.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goToTicketFragment();
+            }
+        });
+
         goToEmbeddedFragment();
         //bottomNavigationView =findViewById(R.id.bottom_navigation);
         //bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
         //getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,new ClientSocketFragment()).commit();
     }
 
+    public void goToTicketFragment(){
+        ticketFragment=new TicketFragment();
+        NavigationFragment.addFragment(null, ticketFragment, "ticketFragment", this,
+                R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
+
+    }
+
     public void goToEmbeddedFragment(){
+        clientSocketFragment = new ClientSocketFragment();
         NavigationFragment.addFragment(null, clientSocketFragment, "connecctionEmbFragment", this,
                 R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
     }

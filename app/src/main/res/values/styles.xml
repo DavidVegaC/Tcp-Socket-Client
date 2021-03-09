@@ -179,4 +179,47 @@
 
     </style>
 
+    <!--*** Estilos Propios ***-->
+
+    <!--*** Botón sincronizar en el Login - Dar redondez al material button ***-->
+    <style name="ShapeAppearanceOverlay.MyApp.Button.Circle" parent="Widget.MaterialComponents.Button.Icon">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50dp</item>
+    </style>
+
+    <!--*** Input Layout en el Login ***-->
+    <style name="InputLayout1" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+        <item name="boxStrokeColor">@color/md_white_1000</item>
+        <item name="boxBackgroundColor">@color/md_grey_700</item>
+        <item name="boxStrokeWidth">10dp</item>
+        <item name="errorEnabled">true</item>
+        <item name="android:text">@color/md_white_1000</item>
+        <item name="counterEnabled">true</item>
+        <item name="hintTextColor">@color/md_white_1000</item>
+    </style>
+
+    <!--*** EditText que estan dentro del Input Layout en el Login ***-->
+    <style name="EditText1" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:textSize">30sp</item>
+        <item name="android:textColorHint">@color/md_white_1000</item>
+        <item name="android:lines">1</item>
+    </style>
+
+    <!--*** Estilo para el progress ***-->
+    <style name="AppThemeAssacDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="colorAccent">@color/md_white_1000</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:width">250dp</item>
+        <item name="android:labelTextSize">20sp</item>
+        <item name="android:textColorPrimary">@color/md_white_1000</item>
+        <item name="android:background">@color/md_red_800</item>
+
+    </style>
+
+    <!--*** Estilo para el AlertDialog ***-->
+    <!--Theme.MaterialComponents.Dialog.Alert: tema oscuro sin radius-->
+    <style name="AppThemeAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+
+    </style>
+
 </resources>

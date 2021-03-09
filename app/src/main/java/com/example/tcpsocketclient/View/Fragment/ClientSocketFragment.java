@@ -45,6 +45,8 @@ import com.example.tcpsocketclient.ConnectTask;
 import com.example.tcpsocketclient.Entities.LayoutHoseEntity;
 import com.example.tcpsocketclient.Entities.TransactionEntity;
 import com.example.tcpsocketclient.R;
+import com.example.tcpsocketclient.Storage.DB.CRUDOperations;
+import com.example.tcpsocketclient.Storage.DB.MyDatabase;
 import com.example.tcpsocketclient.TcpClient;
 import com.example.tcpsocketclient.Util.Internet.NetworkUtil;
 import com.example.tcpsocketclient.Util.Wifi.EmbeddedPtcl;
@@ -155,6 +157,8 @@ public class ClientSocketFragment extends Fragment {
     TextView   txt_producto;
     String ultimoGalonBomba = "0.00";
 
+    CRUDOperations crudOperations;
+
     public ClientSocketFragment() {
         // Required empty public constructor
     }
@@ -231,6 +235,7 @@ public class ClientSocketFragment extends Fragment {
         };
 
         networkUtil= new NetworkUtil(rootView.getContext());
+        crudOperations = new CRUDOperations(new MyDatabase(getContext()));
     }
 
     /*public class ConnectThread extends AsyncTask<String, String, TcpClient> {
@@ -315,6 +320,12 @@ public class ClientSocketFragment extends Fragment {
         private Socket wifiSocket = null;
         private boolean mRun=true;
         public int longitud;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            Log.d("David1","holaaa");
+        }
 
         @Override
         protected Boolean doInBackground(String... message) {
@@ -526,7 +537,6 @@ public class ClientSocketFragment extends Fragment {
                 //new ClientTCPThread().execute();
                 validarWIFI=true;
                 crearNuevoSocket();
-
             } else {
                 Log.i("AsyncTask", "onPostExecute: Completed.");
             }
@@ -729,7 +739,7 @@ public class ClientSocketFragment extends Fragment {
 
                     llenarDatosConfiguracion();
                     agregarImagenEstaciones();
-                    inicializarMangueras();
+                    //inicializarMangueras();
                     clientTCPThread.write(EmbeddedPtcl.b_ext_configuracion); //0x06
 
                     //inicializarMangueras();
@@ -770,7 +780,7 @@ public class ClientSocketFragment extends Fragment {
                         break;
                     case 0x02:
                         //Estado actual de Mangueras
-                        //cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
+                        cambioEstado(indiceLayoutHose, bufferRecepcion[8]);
                         clientTCPThread.write(EmbeddedPtcl.b_ext_cambio_estado);//0x01
                         //mConnectedThread.write(EmbeddedPtcl.b_ext_cambio_estado); //0x01
                         break;
@@ -920,7 +930,7 @@ public class ClientSocketFragment extends Fragment {
                 contadorIteracionesManguera ++;
             }
             transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
-
+            //Capturar nombreProducto
             int[] nombreProducto = new int[10];
             int contadorProductoInicial = pIinicial + 13;
             int contadorProductoFinal = contadorProductoInicial + 9;
@@ -1559,9 +1569,18 @@ public class ClientSocketFragment extends Fragment {
         txt_ultimo_ticket_p2.setText(entity.getNumeroTransaccion());
 
 
-        //guardarTransaccionBD(entity);
+        guardarTransaccionBD(entity);
 
     }
+
+    public void guardarTransaccionBD(TransactionEntity entity){
+        List<TransactionEntity> lst = crudOperations.getTransactionByTransactionAndHose(entity.getNumeroTransaccion());
+        int resultado = 0;
+        if(lst.size() == 0){
+            resultado = crudOperations.addTransaction(entity);
+        }
+    }
+
 
     //CAMBIAR PLACA ACTUAL
     public void cambiarPlaca(int indiceLayoutHose){
