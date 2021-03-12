@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void goToTicketFragment(){
+        clientSocketFragment = null;
         ticketFragment=new TicketFragment();
         NavigationFragment.addFragment(null, ticketFragment, "ticketFragment", this,
                 R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void goToEmbeddedFragment(){
+        ticketFragment = null;
         clientSocketFragment = new ClientSocketFragment();
         NavigationFragment.addFragment(null, clientSocketFragment, "connecctionEmbFragment", this,
                 R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
