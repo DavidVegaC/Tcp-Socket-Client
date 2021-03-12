@@ -42,6 +42,7 @@ import com.example.tcpsocketclient.Util.Utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,6 +70,7 @@ public class TicketFragment extends Fragment {
 
     private BluetoothSocket btSocketPrinter = null;
     private BluetoothAdapter btAdapter = null;
+    private BluetoothDevice device=null;
     private ConnectedThreadPrinter mConnectedThreadPrinter;
     private static String  MAC_PRINTER = "DC:0D:30:87:19:ED";
     private static final UUID BTMODULEUUID_PRINTER = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -151,19 +153,18 @@ public class TicketFragment extends Fragment {
         mDialog = new CustomProgressDialog(getContext());
 
 
-        /*btAdapter = BluetoothAdapter.getDefaultAdapter();
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter == null) {
             // Device does not support Bluetooth
             Toast.makeText(getActivity(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
             getActivity().finish();
-        }*/
+        }
 
         loadTransaction();
         SwipeTicketFragment.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 loadTransaction();
-
             }
         });
         btnBuscarTicketFragment.setOnClickListener(new View.OnClickListener() {
@@ -305,9 +306,7 @@ public class TicketFragment extends Fragment {
             super.onPreExecute();
             mDialog.showProgressDialog("Cargando impresora...");
             Log.d("David1","holaaa");
-            doInBackground(
-                    ""
-            );
+            //doInBackground(  "");
         }
 
         @Override
@@ -328,8 +327,7 @@ public class TicketFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-            Log.d("David","asdds");
-            onPostExecute(result);
+            //onPostExecute(result);
             return result;
         }
 
@@ -344,11 +342,10 @@ public class TicketFragment extends Fragment {
         @Override
         protected void onPostExecute(Boolean s) {
             mDialog.dismissProgressDialog();
-            Log.d("David3","holaaa");
             if(!s){
                 Toast.makeText(getContext(),"No se puede conectar con la impresora identificada con MAC: "+ MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
             }
-
+            Log.v("Daviddd","99999");
         }
 
 
@@ -356,9 +353,11 @@ public class TicketFragment extends Fragment {
 
 
     private void imprimirTicket(TransactionEntity entity){
-
+        Log.d("Leo11","11111");
         String CurrentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
-        printLogoASSAC();
+        printUnicodeC();
+        printText("Estacion: Pionero" );
+        /*printLogoASSAC();
         printUnicodeC1();
         printText("Generado el " +CurrentDate);
         printUnicodeC2();
@@ -377,7 +376,12 @@ public class TicketFragment extends Fragment {
         printText("Producto: " +entity.getNombreProducto());
         printUnicodeC1();
         printNewLine();
-        printNewLine();
+        printNewLine();*/
+        Log.d("Leo11","22222");
+    }
+
+    private void printUnicodeC(){
+        printText(Utils.UNICODE_TEXT);
     }
 
     private void printUnicodeC1(){
@@ -428,35 +432,43 @@ public class TicketFragment extends Fragment {
 
 
     //CREA UNA NUEVA INSTANCIA DE BLUETOOTH SOCKET
-    private boolean crearConexionBTSocketImpresora(){
+    private boolean crearConexionBTSocketImpresora()  {
         boolean response = true;
         //Get MAC address from the Common class
 
         //Create device and set the MAC address
-        BluetoothDevice device = btAdapter.getRemoteDevice(MAC_PRINTER);
+
+        try {
+            device = btAdapter.getRemoteDevice(MAC_PRINTER);
+        }catch (Exception e) {
+            Log.e("ErrorDevice:",e.getMessage());
+            e.printStackTrace();
+        }
 
         try {
             btSocketPrinter = createBluetoothSocketPrinter(device);
             //Toast.makeText(getActivity(), "Creación de socket exitosa con  la impresora: "+MAC_PRINTER, Toast.LENGTH_LONG).show();
+
         } catch (IOException e) {
             //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage(),"1");
-            Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage());
+            Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método1: crearConexionBTSocket / mensaje: "+e.getMessage());
             //Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+MAC_PRINTER + " falló", Toast.LENGTH_LONG).show();
             //mListener.goToBluetoothConfiguration(); //Go back to the main view
         }
         // Establish the Bluetooth socket connection.
-        try
+        /*try
         {
+            Log.v("ErrorBluetooht:","David5");
             btSocketPrinter.connect();
+            Log.v("ErrorBluetooht:","David6");
             mConnectedThreadPrinter = new ConnectedThreadPrinter(btSocketPrinter);
             mConnectedThreadPrinter.start();
 
         } catch (IOException e) {
-            response = false;
             try
             {
                 btSocketPrinter.close();
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage());
+                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método2: crearConexionBTSocket / mensaje: "+e.getMessage());
                 //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: crearConexionBTSocket / mensaje: "+e.getMessage(),"1");
                 //mListener.goToBluetoothConfiguration(); //Go back to the main view
                 //Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+MAC_PRINTER + " falló", Toast.LENGTH_LONG).show();
@@ -467,6 +479,35 @@ public class TicketFragment extends Fragment {
                 //mListener.goToBluetoothConfiguration(); //Go back to the main view
                 //Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+MAC_PRINTER + " falló", Toast.LENGTH_LONG).show();
                 //insert code to deal with this
+            }
+
+        }*/
+        try {
+            btSocketPrinter.connect();
+            Log.v("00000","Connected1");
+            mConnectedThreadPrinter = new ConnectedThreadPrinter(btSocketPrinter);
+            mConnectedThreadPrinter.start();
+        } catch (IOException e) {
+            Log.e("",e.getMessage());
+            try {
+                Log.v("11111","trying fallback...");
+
+                btSocketPrinter =(BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
+                btSocketPrinter.connect();
+                Log.e("222222","Connected2");
+                mConnectedThreadPrinter = new ConnectedThreadPrinter(btSocketPrinter);
+                mConnectedThreadPrinter.start();
+
+            }
+            catch (Exception e2) {
+                response=false;
+                try{
+                    btSocketPrinter.close();
+                }catch(Exception e3){
+                    Log.v("Error","No se pudo cerrar coenxion");
+                }
+
+                Log.e("Error", "Couldn't establish Bluetooth connection!");
             }
         }
         return response;
@@ -512,6 +553,8 @@ public class TicketFragment extends Fragment {
             } catch (IOException e) {
                 //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage(),"1");
                 Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage());
+            }catch (Exception ex){
+                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
             }
 
             mmInStream = tmpIn;
@@ -530,7 +573,7 @@ public class TicketFragment extends Fragment {
 
         //write method
         public void write(String msg) {
-
+            Log.d("Javier","22222");
             int longitud=0;
 
             try {
@@ -542,12 +585,14 @@ public class TicketFragment extends Fragment {
                 //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
                 Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
                 //mListener.goToBluetoothConfiguration();
-
+            }catch (Exception ex){
+                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
             }
+
         }
         //write method
         public void write(byte[] msg) {
-
+            Log.d("Javier","1111");
             int longitud=0;
 
             try {
@@ -559,7 +604,8 @@ public class TicketFragment extends Fragment {
                 //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
                 Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
                 //mListener.goToBluetoothConfiguration();
-
+            }catch (Exception ex){
+                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
             }
         }
     }
