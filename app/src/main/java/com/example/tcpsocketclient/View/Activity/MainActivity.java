@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.tcpsocketclient.R;
 import com.example.tcpsocketclient.Util.CustomAnimation;
@@ -62,10 +63,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void goToTicketFragment(){
-        clientSocketFragment = null;
-        ticketFragment=new TicketFragment();
-        NavigationFragment.addFragment(null, ticketFragment, "ticketFragment", this,
-                R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
+        if(clientSocketFragment.changeFragment){
+            ticketFragment=new TicketFragment();
+            NavigationFragment.addFragment(null, ticketFragment, "ticketFragment", this,
+                    R.id.main_activity_content, false, CustomAnimation.LEFT_RIGHT);
+        }else{
+            Toast.makeText(this, "En estos momentos se está procesando una respuesta del EMBEDED.\nNo se puede cambiar de vista.", Toast.LENGTH_SHORT).show();
+        }
+
 
     }
 

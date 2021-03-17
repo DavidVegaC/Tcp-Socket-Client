@@ -273,7 +273,8 @@ public class TicketFragment extends Fragment {
                             //Toast.makeText(getContext(),"OK",Toast.LENGTH_LONG).show();
                             //validarImpresora(lst.get(rvListaTicket.getChildAdapterPosition(v)));
                             //Log.d("David",listTransaction.get(rvListaTicket.getChildAdapterPosition(v)).getPlaca());
-                            new ValidarImpresoraAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).execute();
+                            //new ValidarImpresoraAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).execute();
+                            new ValidarImpresoraAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                         }
                     });
                     dialog.setButton(Dialog.BUTTON_NEGATIVE, "Cancelar", new DialogInterface.OnClickListener() {

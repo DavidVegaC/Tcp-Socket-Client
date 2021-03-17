@@ -108,8 +108,8 @@ public class ClientSocketFragment extends Fragment {
     Handler handlerSocket;
     final int handlerState = 0;
     //public static  String SERVER_IP = "192.168.1.126";
-    public static  String SERVER_IP = "192.168.1.15";
-    //public static  String SERVER_IP = "192.168.4.22";
+    //public static  String SERVER_IP = "192.168.1.15";
+    public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -136,8 +136,8 @@ public class ClientSocketFragment extends Fragment {
     private NetworkUtil networkUtil;
 
     //private String SSID="TP-LINK_AP_F2D8";
-    private String SSID="MOVISTAR_1B9E";
-    //private String SSID="EMBEDDED";
+    //private String SSID="MOVISTAR_1B9E";
+    private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -166,6 +166,12 @@ public class ClientSocketFragment extends Fragment {
     private ConnectedThreadPrinter mConnectedThreadPrinter;
     private PrinterBluetooth printerBluetooth;
     private  byte[] FEED_LINE = {10};
+
+    //determina la ejecución o no del hilo clientTCPThread
+    public volatile boolean running;
+
+    //determina si se puede cambiar a otro fragment
+    public volatile boolean changeFragment=true;
 
     public ClientSocketFragment() {
         // Required empty public constructor
@@ -217,7 +223,7 @@ public class ClientSocketFragment extends Fragment {
         //new ConnectTask().execute("");
 
         //prueba con Handler y Socket
-
+        running=true;
 
         layout = (ViewGroup) rootView.findViewById(R.id.LayoutContentHoses);
 
@@ -231,6 +237,7 @@ public class ClientSocketFragment extends Fragment {
                 if (msg.what == handlerState) {
                     //if message is what we want
                     if(recepciontTwoEasyFuel((byte[])msg.obj,msg.arg1)){           //Modificar metodo para nuevo protocolo
+                        changeFragment=false;
                         procesarTramaEasyFuel();
                         //String mostrar = armarMensajeMuestra();
 
@@ -334,31 +341,30 @@ public class ClientSocketFragment extends Fragment {
         protected void onPreExecute() {
             super.onPreExecute();
             Log.d("David1","holaaa");
-
         }
-
 
         @Override
         protected Boolean doInBackground(String... message) {
             boolean result = false;
+            Log.d("David2","holaaa");
 
-            while(conexSocket) {
-                if ( isCancelled()) break;
+            while(conexSocket&&running) {
+                if ( clientTCPThread.isCancelled()) break;
                 try {
                     Thread.sleep(tiempoEspera);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 tiempoEspera=0000;
-                while (validarWIFI) {
-                    if ( isCancelled()) break;
+                while (validarWIFI&&running) {
+                    if ( clientTCPThread.isCancelled()) break;
                     try {
                         Thread.sleep(tiempoEspera);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
-                    tiempoEspera = 5000;
+                    tiempoEspera = 4000;
                     if (ActivityCompat.checkSelfPermission(rootView.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                             ActivityCompat.checkSelfPermission(getContext(),
                                     android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -402,8 +408,8 @@ public class ClientSocketFragment extends Fragment {
 
                         //in this while the client listens for the messages sent by the server
                         int tamBytes = 0;
-                        while (mRun) {
-                            if ( isCancelled()) break;
+                        while (mRun&&running) {
+                            if ( clientTCPThread.isCancelled()) break;
                             bufferTemporal = new byte[300];
                             if (!wifiSocket.isClosed()) {
                                 bytes = 0;
@@ -437,7 +443,7 @@ public class ClientSocketFragment extends Fragment {
                         wifiSocket=null;
                         mBufferIn=null;
                         mBufferOut=null;
-
+                        Log.d("ADP Client", "C: Se perdió conexión");
                         //wifiSocket.disconnect();
                         //this.socket=null;
                         //SocketManager.instance = null;
@@ -461,74 +467,15 @@ public class ClientSocketFragment extends Fragment {
                 }
             }
 
-            /*tiempoEspera=0000;
-            while(conexSocket){
-
-                try{
-                    Thread.sleep(tiempoEspera);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-                tiempoEspera=4000;
-                try {
-                    SocketAddress sockaddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
-                    wifiSocket = new Socket();
-                    Log.d("TCP Client", "C: Connecting...");
-                    wifiSocket.connect(sockaddr, 5000);
-
-                    Log.d("TCP Client", "C: Connectado..");
-                    mostrarMensajeUsuario("Se conectó al Socket con éxito.");
-                    try {
-                        int bytes;
-                        //sends the message to the server
-                        mBufferOut = wifiSocket.getOutputStream();
-
-                        //receives the message which the server sends back
-                        mBufferIn = wifiSocket.getInputStream();
-
-                        //in this while the client listens for the messages sent by the server
-                        int tamBytes=0;
-                        while (mRun) {
-                            bufferTemporal = new byte[300];
-                            if(!wifiSocket.isClosed()) {
-                                bytes=0;
-                                //mBufferIn.read(lenBytes, 0, 10);
-                                bytes=mBufferIn.read(bufferTemporal);
-
-                                handlerSocket.obtainMessage(handlerState, bytes, -1, bufferTemporal).sendToTarget();
-
-                            }
-
-                        }
-                    }  catch (IOException e) {
-                        //e.printStackTrace();
-                        //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
-                        result = true;
-                        mRun=false;
-                        //Toast.makeText(rootView.getContext(), "Se perdió la conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
-                        mostrarMensajeUsuario("Se perdió la conexión con el socket del servidor");
-                    }catch (Exception e) {
-                        result = true;
-                        Log.e("TCP", "S: Error", e);
-                    } finally {
-                        //the socket must be closed. It is not possible to reconnect to this socket
-                        // after it is closed, which means a new socket instance has to be created.
-                        wifiSocket.close();
-                        mRun=false;
-                    }
-
-                } catch (UnknownHostException e) {
-                    //e.printStackTrace();
-                    Log.e("TCP", e.getMessage(), e);
+            if(running==false){
+                /*try {
+                    wifiSocket.close();
                 } catch (IOException e) {
-                    //e.printStackTrace();
-                    //Log.e("TCP", "B: Error"+e.getClass()+ " - "+e.getMessage() + " - "+e.getCause(), e);
-                    //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
-                    mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
-                }catch(Exception e){
-                    Log.e("TCP", "C: Error", e);
-                }
-            }*/
+                    Log.v("Error ",e.getMessage());
+                }*/
+                Log.v("AsyncTask", "onPostExecute: Completed.");
+            }
+
             //onPostExecute(result);
             return result;
         }
@@ -551,7 +498,7 @@ public class ClientSocketFragment extends Fragment {
                 //clientTCPThread.doInBackground();
                 //new ClientTCPThread().execute();
 
-                if ( !isCancelled()) {
+                if (!isCancelled() && running == true) {
                     validarWIFI=true;
                     crearNuevoSocket();
                 }
@@ -561,7 +508,6 @@ public class ClientSocketFragment extends Fragment {
             }
 
         }
-
 
         public void write(int opcode) {
             bufferTransmision = new byte[300];
@@ -600,7 +546,15 @@ public class ClientSocketFragment extends Fragment {
 
         @Override
         protected void onCancelled() {
-            clientTCPThread=null;
+            //clientTCPThread=null;
+            super.onCancelled();
+            cancel(true);
+            try {
+                if(wifiSocket!=null)
+                    wifiSocket.close();
+            } catch (IOException e) {
+                Log.i("AsyncTask", "onPostExecute: Completed.");
+            }
         }
     }
 
@@ -614,7 +568,6 @@ public class ClientSocketFragment extends Fragment {
         }
 
     }
-
 
     //Verificación de Ubicación
     private void validateLocation(){
@@ -862,6 +815,7 @@ public class ClientSocketFragment extends Fragment {
                 }
                 break;
         }
+        changeFragment=true;
     }
 
     //CARGAR DATOS BOMBAS ACTIVAS RECIBIDAS
@@ -1601,7 +1555,7 @@ public class ClientSocketFragment extends Fragment {
     }
 
     private void imprimirTransaccion(final TransactionEntity entity){
-        Log.v("Miguel","imprimir");
+
         /*new Thread(new Runnable() {
             public void run() {
                 try {
@@ -1622,7 +1576,6 @@ public class ClientSocketFragment extends Fragment {
         });
 
     }
-
 
     //CAMBIAR PLACA ACTUAL
     public void cambiarPlaca(int indiceLayoutHose){
@@ -2082,13 +2035,37 @@ public class ClientSocketFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.v("David","1232456"+clientTCPThread.getStatus());
+        //clientTCPThread.cancel(false);
+        //clientTCPThread.onPostExecute(false);
+        //running=false;
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.v("Marco","1232456"+clientTCPThread.getStatus());
+        //conexSocket=false;
+        //handlerSocket=null;
+        //clientTCPThread = null;
+
+        /*getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                clientTCPThread.cancel(true);
+                running=false;
+            }
+        });*/
+
+        //Log.v("Marco","1232456"+clientTCPThread.getStatus());//In case the task is currently running
+        running=false;
         clientTCPThread.cancel(true);
-        Log.v("Marco","1232456"+clientTCPThread.getStatus());//In case the task is currently running
+        clientTCPThread.onCancelled();
+        handlerSocket=null;
+        clientTCPThread = null;
     }
 
 }
