@@ -35,7 +35,9 @@ public class PrinterBluetooth {
             device = btAdapter.getRemoteDevice(MAC_PRINTER);
         }catch (Exception e) {
             Log.e("ErrorDevice:",e.getMessage());
-            e.printStackTrace();
+            //e.printStackTrace();
+            response=false;
+            return response;
         }
 
         try {
@@ -47,6 +49,8 @@ public class PrinterBluetooth {
             Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método1: crearConexionBTSocket / mensaje: "+e.getMessage());
             //Toast.makeText(getActivity(), "La creacción del Socket con el dispositivo "+MAC_PRINTER + " falló", Toast.LENGTH_LONG).show();
             //mListener.goToBluetoothConfiguration(); //Go back to the main view
+            response=false;
+            return response;
         }
         // Establish the Bluetooth socket connection.
         /*try
@@ -97,7 +101,8 @@ public class PrinterBluetooth {
                 try{
                     btSocketPrinter.close();
                 }catch(Exception e3){
-                    Log.v("Error","No se pudo cerrar coenxion");
+                    Log.v("Error","No se pudo cerrar conexion");
+                    return response;
                 }
 
                 Log.e("Error", "Couldn't establish Bluetooth connection!");
@@ -120,7 +125,7 @@ public class PrinterBluetooth {
         } catch (IOException e) {
             //insert code to deal with this
             //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: cerrarConexionBTSocket / mensaje: "+e.getMessage(),"1");
-            Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: cerrarConexionBTSocket / mensaje: "+e.getMessage());
+            Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: PrinterBluetooth / cerrarConexionBTSocket / mensaje: "+e.getMessage());
         }
     }
 

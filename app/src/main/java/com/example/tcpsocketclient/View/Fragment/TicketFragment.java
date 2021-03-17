@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -167,6 +168,8 @@ public class TicketFragment extends Fragment {
             }
         });
 
+        printerBluetooth = new PrinterBluetooth();
+
 //
 //        btnAbrirCnImpresora.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -183,6 +186,18 @@ public class TicketFragment extends Fragment {
 //        });
 
         //crearConexionBTSocketImpresora();
+    }
+
+    public void mostrarMensajeUsuario(final String mensaje){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Stuff that updates the UI
+                //tv1.setText(mensaje);
+                Toast.makeText(rootView.getContext(), mensaje,
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public void loadTransaction(){
@@ -304,21 +319,31 @@ public class TicketFragment extends Fragment {
             super.onPreExecute();
             mDialog.showProgressDialog("Cargando impresora...");
             Log.d("David1","holaaa");
-            doInBackground(  "");
         }
 
-        @SuppressLint("WrongThread")
+
         @Override
         protected Boolean doInBackground(String... params) {
             Log.d("David2","holaaa");
             boolean result = false;
-            printerBluetooth = new PrinterBluetooth();
+
             if (printerBluetooth.btAdapter == null) {
                 // Device does not support Bluetooth
-                Toast.makeText(getActivity(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
-                getActivity().finish();
+                //Toast.makeText(rootView.getContext(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
+                mostrarMensajeUsuario("Dispositivo no soporta bluetooth.");
+                //getActivity().finish();
                 result=true;
             }else{
+
+                if(!printerBluetooth.btAdapter.isEnabled()) {
+                    //Log.d(TAG, "enableDisableBT: enabling BT.");
+                   /*Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivity(enableBTIntent);*/
+                    mostrarMensajeUsuario("Favor de activar su Bluetooth.");
+                    result=true;
+                    return  result;
+                }
+
                 printerBluetooth.cerrarConexionBTSocketImpresora();
                 result = printerBluetooth.crearConexionBTSocketImpresora();
                 if(printerBluetooth.btSocketPrinter.isConnected()){
@@ -336,7 +361,6 @@ public class TicketFragment extends Fragment {
                 }
             }
 
-            onPostExecute(result);
             return result;
         }
 

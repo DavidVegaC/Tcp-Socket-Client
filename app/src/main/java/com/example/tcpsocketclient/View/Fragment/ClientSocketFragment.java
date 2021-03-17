@@ -108,7 +108,8 @@ public class ClientSocketFragment extends Fragment {
     Handler handlerSocket;
     final int handlerState = 0;
     //public static  String SERVER_IP = "192.168.1.126";
-    public static  String SERVER_IP = "192.168.4.22";
+    public static  String SERVER_IP = "192.168.1.15";
+    //public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -135,7 +136,8 @@ public class ClientSocketFragment extends Fragment {
     private NetworkUtil networkUtil;
 
     //private String SSID="TP-LINK_AP_F2D8";
-    private String SSID="EMBEDDED";
+    private String SSID="MOVISTAR_1B9E";
+    //private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -240,6 +242,7 @@ public class ClientSocketFragment extends Fragment {
             }
         };
 
+        printerBluetooth = new PrinterBluetooth();
         networkUtil= new NetworkUtil(rootView.getContext());
         crudOperations = new CRUDOperations(new MyDatabase(getContext()));
     }
@@ -449,7 +452,7 @@ public class ClientSocketFragment extends Fragment {
                     //Toast.makeText(getActivity(), "No se logró establecer conexión con el socket del servidor", Toast.LENGTH_SHORT).show();
                     mostrarMensajeUsuario("No se logró establecer conexión con el socket del servidor");
                     Log.d("TCP Client", "C: No se pudo conectar");
-                    tiempoEspera=2000;
+                    tiempoEspera=4000;
                     conexSocket=true;
                 } catch (Exception e) {
                     Log.e("TCP", "C: Error", e);
@@ -526,7 +529,7 @@ public class ClientSocketFragment extends Fragment {
                     Log.e("TCP", "C: Error", e);
                 }
             }*/
-            onPostExecute(result);
+            //onPostExecute(result);
             return result;
         }
 
@@ -1585,7 +1588,7 @@ public class ClientSocketFragment extends Fragment {
         txt_ultimo_ticket_p2.setText(entity.getNumeroTransaccion());
 
         guardarTransaccionBD(entity);
-        //imprimirTransaccion(entity);
+
     }
 
     private void guardarTransaccionBD(TransactionEntity entity){
@@ -1593,12 +1596,13 @@ public class ClientSocketFragment extends Fragment {
         int resultado = 0;
         if(lst.size() == 0){
             resultado = crudOperations.addTransaction(entity);
+            imprimirTransaccion(entity);
         }
     }
 
     private void imprimirTransaccion(final TransactionEntity entity){
         Log.v("Miguel","imprimir");
-        new Thread(new Runnable() {
+        /*new Thread(new Runnable() {
             public void run() {
                 try {
                     new ValidarImpresoraAsync(entity).execute();
@@ -1606,7 +1610,16 @@ public class ClientSocketFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        }).start();*/
+
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Stuff that updates the UI
+                //tv1.setText(mensaje);
+                new ValidarImpresoraAsync(entity).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        });
 
     }
 
@@ -1857,18 +1870,26 @@ public class ClientSocketFragment extends Fragment {
 
         }
 
-
         @Override
         protected Boolean doInBackground(String... params) {
             Log.d("David2","holaaa");
             boolean result = false;
-            printerBluetooth = new PrinterBluetooth();
+
             if (printerBluetooth.btAdapter == null) {
                 // Device does not support Bluetooth
-                Toast.makeText(getActivity(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
-                getActivity().finish();
+                mostrarMensajeUsuario("Dispositivo no soporta bluetooth.");
+                //getActivity().finish();
                 result=true;
             }else{
+
+                if(!printerBluetooth.btAdapter.isEnabled()) {
+                    //Log.d(TAG, "enableDisableBT: enabling BT.");
+                   /*Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivity(enableBTIntent);*/
+                    mostrarMensajeUsuario("Favor de activar su Bluetooth.");
+                    result=true;
+                    return  result;
+                }
                 printerBluetooth.cerrarConexionBTSocketImpresora();
                 result = printerBluetooth.crearConexionBTSocketImpresora();
                 if(printerBluetooth.btSocketPrinter.isConnected()){
@@ -1885,7 +1906,6 @@ public class ClientSocketFragment extends Fragment {
                     }
                 }
             }
-
             return result;
         }
 
@@ -1901,11 +1921,11 @@ public class ClientSocketFragment extends Fragment {
         protected void onPostExecute(Boolean s) {
             //mDialog.dismissProgressDialog();
             if(!s){
-                Toast.makeText(getContext(),"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
+                //Toast.makeText(getContext(),"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
+                mostrarMensajeUsuario("No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.");
             }
             Log.v("Daviddd","99999");
         }
-
 
     }
 
