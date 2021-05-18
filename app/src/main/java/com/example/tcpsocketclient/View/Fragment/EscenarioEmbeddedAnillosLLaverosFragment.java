@@ -93,8 +93,8 @@ public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
     private byte[] bufferTemporal = new byte[300];
     Handler handlerSocket;
     final int handlerState = 0;
-    //public static  String SERVER_IP = "192.168.1.126";
-    public static  String SERVER_IP = "192.168.1.7";
+    public static  String SERVER_IP = "192.168.1.111";
+    //public static  String SERVER_IP = "192.168.1.7";
     //public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
@@ -123,8 +123,8 @@ public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
 
     private NetworkUtil networkUtil;
 
-    //private String SSID="TP-LINK_AP_F2D8";
-    private String SSID="MOVISTAR_1B9E";
+    private String SSID="TP-LINK_AP_F2D8";
+    //private String SSID="MOVISTAR_1B9E";
     //private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
@@ -851,7 +851,7 @@ public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
                 nombreManguera[contadorIteracionesManguera] = bufferRecepcion[j];
                 contadorIteracionesManguera ++;
             }
-            transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
+            //transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
             Log.v("Nombre Manguera", hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
 
             //Capturar nombreProducto
@@ -1185,7 +1185,6 @@ public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
         }
     }
 
-
     //Cambio de estados de Abastecimiento
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambioEstado(int indiceLayoutHose, int pEstadoActual){
@@ -1514,8 +1513,6 @@ public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
 
         //double kilometro = kilometroParteEntera + kilometroParteDecimal*0.1;
         double kilometro = Double.valueOf(kilometroParteEntera + "."+kilometroParteDecimal);
-
-
         entity.setKilometraje(""+kilometro);
 
         Log.v("Kilometro",""+kilometro);

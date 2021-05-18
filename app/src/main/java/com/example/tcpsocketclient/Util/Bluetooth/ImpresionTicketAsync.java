@@ -31,6 +31,7 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
     private  byte[] FEED_LINE = {10};
     private CustomProgressDialog mDialog;
     private Context activity;
+    private String mensajeError="";
 
     public ImpresionTicketAsync(TransactionEntity transactionEntity, PrinterBluetooth printerBluetooth, CustomProgressDialog mDialog, Context activity) {
         super();
@@ -47,23 +48,19 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
             mDialog.showProgressDialog("Cargando impresora...");
     }
 
-
     @Override
     protected Boolean doInBackground(String... params) {
         boolean result = false;
 
         if (printerBluetooth.btAdapter == null) {
             // Device does not support Bluetooth
-            //Toast.makeText(rootView.getContext(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
-            Toast.makeText(activity,"Dispositivo no soporta bluetooth.",Toast.LENGTH_LONG).show();
-            //getActivity().finish();
-            result=true;
+            mensajeError="Dispositivo no soporta bluetooth.";
+            result=false;
         }else{
 
             if(!printerBluetooth.btAdapter.isEnabled()) {
-                Toast.makeText(activity,"Favor de activar su Bluetooth.",Toast.LENGTH_LONG).show();
-                result=true;
-                return  result;
+                mensajeError="Favor de activar su Bluetooth.";
+                return  false;
             }
 
             printerBluetooth.cerrarConexionBTSocketImpresora();
@@ -80,6 +77,8 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
+            }else{
+                mensajeError="No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.";
             }
         }
 
@@ -96,7 +95,7 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
         if(mDialog!=null)
             mDialog.dismissProgressDialog();
         if(!s){
-            Toast.makeText(activity,"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
+            Toast.makeText(activity,mensajeError,Toast.LENGTH_LONG).show();
         }
     }
 
@@ -142,14 +141,15 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
         // Print normal text
         mConnectedThreadPrinter.write(msg);
         printNewLine();
-
     }
+
     //print byte[]
     private void printText(byte[] msg) {
         // Print normal text
         mConnectedThreadPrinter.write(msg);
         printNewLine();
     }
+
     //print new line
     private void printNewLine() {
         mConnectedThreadPrinter.write(FEED_LINE);
@@ -242,7 +242,6 @@ public class ImpresionTicketAsync extends AsyncTask<String,String, Boolean> {
             }
         }
     }
-
 
 }
 

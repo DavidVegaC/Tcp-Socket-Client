@@ -672,7 +672,6 @@ public class EscenarioSinEmbeddedFragment extends Fragment implements MainView {
         mNfcAdapter.disableForegroundDispatch(fragmentActivity);
     }
 
-
     public void processIntent(Intent intent) {
         Log.v(TAG, "ENTRÓ handleIntent");
         String action = intent.getAction();
@@ -1116,6 +1115,7 @@ public class EscenarioSinEmbeddedFragment extends Fragment implements MainView {
             migrationEntity.setMigrationDescription("Error Obteniendo Maestros. "+mensaje);
             int row=crudOperations.addMigration(migrationEntity);
             Log.v("Insertado Fallo1", ""+row);
+            Log.v("Maestros", ""+mensaje);
 
         } else if (map.containsKey(mPresenter.KEY_LREGISTROTRANSACCION)) {
             String mensaje = (String) map.get(mPresenter.KEY_LREGISTROTRANSACCION);
@@ -1123,6 +1123,7 @@ public class EscenarioSinEmbeddedFragment extends Fragment implements MainView {
             migrationEntity.setMigrationDescription("Error Insertando transaccion pendiente."+mensaje);
             int row=crudOperations.addMigration(migrationEntity);
             Log.v("Insertado Fallo2", ""+row);
+            Log.v("Transacciones", ""+mensaje);
 
         }
     }

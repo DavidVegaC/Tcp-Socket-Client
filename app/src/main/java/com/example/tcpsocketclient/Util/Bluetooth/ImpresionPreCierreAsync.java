@@ -35,6 +35,7 @@ public class ImpresionPreCierreAsync extends AsyncTask<String,String, Boolean> {
     private  byte[] FEED_LINE = {10};
     private CustomProgressDialog mDialog;
     private Context activity;
+    private String mensajeError="";
 
     public ImpresionPreCierreAsync(int tipoReporte, String dateTimeStartReport, String dateTimeEndReport,String galonesTotalPreCierre,List<LayoutHosePreCierre> layoutsHosesPreCierre, PrinterBluetooth printerBluetooth, CustomProgressDialog mDialog, Context activity) {
         super();
@@ -61,14 +62,13 @@ public class ImpresionPreCierreAsync extends AsyncTask<String,String, Boolean> {
 
         if (printerBluetooth.btAdapter == null) {
             // Device does not support Bluetooth
-            Toast.makeText(activity,"Dispositivo no soporta bluetooth.",Toast.LENGTH_LONG).show();
-            result=true;
+            mensajeError="Dispositivo no soporta bluetooth.";
+            result=false;
         }else{
 
             if(!printerBluetooth.btAdapter.isEnabled()) {
-                Toast.makeText(activity,"Favor de activar su Bluetooth.",Toast.LENGTH_LONG).show();
-                result=true;
-                return  result;
+                mensajeError="Favor de activar su Bluetooth.";
+                return  false;
             }
 
             printerBluetooth.cerrarConexionBTSocketImpresora();
@@ -85,6 +85,8 @@ public class ImpresionPreCierreAsync extends AsyncTask<String,String, Boolean> {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
+            }else{
+                mensajeError="No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.";
             }
         }
 
@@ -103,8 +105,9 @@ public class ImpresionPreCierreAsync extends AsyncTask<String,String, Boolean> {
     protected void onPostExecute(Boolean s) {
         if(mDialog!=null)
             mDialog.dismissProgressDialog();
+
         if(!s){
-            Toast.makeText(activity,"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
+            Toast.makeText(activity,mensajeError,Toast.LENGTH_LONG).show();
         }
     }
 

@@ -695,16 +695,16 @@ public class CRUDOperations {
                 " RA." +MyDatabase.KEY_REGISTRATION_USER_TB_TRANSACTION +" , " +
                 " RA." +MyDatabase.KEY_REGISTRATION_STATUS_TB_TRANSACTION +" , " +
                 " RA." +MyDatabase.KEY_MIGRATION_STATUS_TB_TRANSACTION  +
-
                 " FROM " + MyDatabase.TB_TRANSACTION + " RA" +
                 " WHERE RA." + MyDatabase.KEY_HOSE_NUMBER_TB_TRANSACTION + " = " + numberHose +
                 " AND RA."+ MyDatabase.KEY_SCENE_TB_TRANSACTION + " = " + scene +
                 " AND RA."+ MyDatabase.KEY_REGISTRATION_STATUS_TB_TRANSACTION + " =  'P' " +
-                " AND RA." +MyDatabase.KEY_START_DATE_TB_TRANSACTION +" || ' ' || RA." +MyDatabase.KEY_START_HOUR_TB_TRANSACTION +" BETWEEN '"+dateTimeStart +"' AND '"+dateTimeEnd+"' "+
+                " AND substr(RA." +MyDatabase.KEY_START_DATE_TB_TRANSACTION +",7,4) || '-' || substr(RA."+MyDatabase.KEY_START_DATE_TB_TRANSACTION +",4,2) || '-' || substr(RA."+MyDatabase.KEY_START_DATE_TB_TRANSACTION +",1,2)"+
+                " || ' ' || RA." +MyDatabase.KEY_START_HOUR_TB_TRANSACTION +" BETWEEN '"+dateTimeStart +"' AND '"+dateTimeEnd+"' "+
+                //" AND RA." +MyDatabase.KEY_START_DATE_TB_TRANSACTION +" || ' ' || RA." +MyDatabase.KEY_START_HOUR_TB_TRANSACTION +" >= '"+dateTimeStart+"' " +
                 " ORDER BY RA." + MyDatabase.KEY_TICKET_NUMBER_TB_TRANSACTION + " DESC";
 
-
-
+        Log.v("Sentencia "+numberHose, " "+sql);
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor cursor=null;
 
@@ -735,6 +735,7 @@ public class CRUDOperations {
                 String registrationStatus = ""+cursor.getString(16);
                 String migrationStatus = ""+cursor.getString(17);
 
+                Log.v("Manguera "+hoseNumber,""+startDate+" "+startHour);
                 transactionEntity.setIdSqlite(idSqlite);
                 transactionEntity.setIdTransaction(idTransaction);
                 transactionEntity.setNumeroTransaccion(""+ticketNumber);
@@ -1110,6 +1111,16 @@ public class CRUDOperations {
         db.execSQL("DELETE FROM "+ MyDatabase.TB_DRIVER);
         db.execSQL("DELETE FROM "+ MyDatabase.TB_OPERATOR);
         db.execSQL("DELETE FROM "+ MyDatabase.TB_PLATE);
+    }
+
+    //LIMPIAR MAESTROS
+    public void clearTablesAllMasters() {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.execSQL("DELETE FROM "+ MyDatabase.TB_DRIVER);
+        db.execSQL("DELETE FROM "+ MyDatabase.TB_OPERATOR);
+        db.execSQL("DELETE FROM "+ MyDatabase.TB_PLATE);
+        db.execSQL("DELETE FROM "+ MyDatabase.TB_HOSE);
+        db.execSQL("DELETE FROM "+ MyDatabase.TB_HARDWARE);
     }
 
     //INSERTAR MAESTROS

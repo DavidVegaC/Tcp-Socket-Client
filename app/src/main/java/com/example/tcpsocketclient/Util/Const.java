@@ -17,7 +17,8 @@ public class Const {
     /******************************VARIABLES***********************************/
     /***VARIABLES PARA EL SERVICIO***/
     ///  IP Servidor Web
-    public static String IP_SERVER = "192.168.1.7";//"192.168.1.21";
+    //public static String IP_SERVER = "192.168.1.7";
+    public static String IP_SERVER = "192.168.1.111";
     //  Dirección Servicio Api
     //public static final String HTTP_SITE = "http://" + IP_SERVER + "/SERVICIO_BT/";
     public static final String HTTP_SITE = "http://" + IP_SERVER + "/api/";

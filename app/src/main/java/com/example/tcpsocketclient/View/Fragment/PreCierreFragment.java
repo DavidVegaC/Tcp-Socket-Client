@@ -46,6 +46,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import static com.example.tcpsocketclient.Util.Utils.dateToDateSQLite;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link PreCierreFragment#newInstance} factory method to
@@ -188,7 +190,7 @@ public class PreCierreFragment extends Fragment {
         txtDateEndPreCierre.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDatePickerDialog(txtDateStartPreCierre);
+                showDatePickerDialog(txtDateEndPreCierre);
             }
         });
 
@@ -227,9 +229,9 @@ public class PreCierreFragment extends Fragment {
 
     private void generateReport(){
         galonesTotalPreCierre=0.0;
-        String dateStartReport = txtDateStartPreCierre.getText().toString();
+        String dateStartReport = dateToDateSQLite(txtDateStartPreCierre.getText().toString());
         String timeStartReport = txtTimeStartPreCierre.getText().toString()+":00";
-        String dateEndReport = txtDateEndPreCierre.getText().toString();
+        String dateEndReport = dateToDateSQLite(txtDateEndPreCierre.getText().toString());
         String timeEndReport = txtTimeEndPreCierre.getText().toString()+":00";
 
         dateTimeStartReport =dateStartReport + " "+ timeStartReport;
@@ -248,20 +250,21 @@ public class PreCierreFragment extends Fragment {
         double totalGalonesManguera;
 
         for (Hose hose: hoses) {
-            totalGalonesManguera=0.0;
+            totalGalonesManguera = 0.0;
             //transactionEntitiesByHose=new ArrayList<>();
             LayoutInflater inflater = LayoutInflater.from(rootView.getContext());
 
             LinearLayout hoseLayout = (LinearLayout) inflater.inflate(R.layout.layout_hose_detalle_pre_cierre, null, false);
             txt_total_nombre_manguera = hoseLayout.findViewById(R.id.txt_total_nombre_manguera);
             txt_nombre_manguera = hoseLayout.findViewById(R.id.txt_nombre_manguera);
-            txt_total_abastecimiento_manguera= hoseLayout.findViewById(R.id.txt_total_abastecimiento_manguera);
+            txt_total_abastecimiento_manguera = hoseLayout.findViewById(R.id.txt_total_abastecimiento_manguera);
             ly_transacciones_manguera = hoseLayout.findViewById(R.id.ly_transacciones_manguera);
             ly_cabecera_manguera_pre_cierre = hoseLayout.findViewById(R.id.ly_cabecera_manguera_pre_cierre);
 
             txt_nombre_manguera.append(hose.HoseName);
             txt_total_nombre_manguera.append(hose.HoseName);
 
+            Log.v("Parametros ",""+ dateTimeStartReport +" - "+dateTimeEndReport+" - "+hose.HoseNumber+" - "+escenario);
             transactionEntitiesByHose=crudOperations.getTransactionByHose(dateTimeStartReport,dateTimeEndReport,hose.HoseNumber,escenario);
             Log.v("Transactions "+hose.HoseNumber,""+ transactionEntitiesByHose.size());
 

@@ -230,7 +230,6 @@ public class TicketFragment extends Fragment {
         this.escenario=escenario;
     }
 
-
     public void mostrarMensajeUsuario(final String mensaje){
         getActivity().runOnUiThread(new Runnable() {
             @Override

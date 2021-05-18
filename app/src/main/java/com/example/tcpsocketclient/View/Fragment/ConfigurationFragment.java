@@ -51,6 +51,8 @@ public class ConfigurationFragment extends Fragment {
     private int idScenario;
     private int  idItemSpinner;
 
+    CRUDOperations crudOperations;
+
     public ConfigurationFragment() {
         // Required empty public constructor
     }
@@ -123,6 +125,7 @@ public class ConfigurationFragment extends Fragment {
                     PreferencesHelper.saveScene(activityContext,idItemSpinner);
                     idScenario = PreferencesHelper.getIdScene(activityContext);
                     if(idScenario==idItemSpinner){
+                        crudOperations.clearTablesAllMasters();
                         Toast.makeText(activityContext, "Configuración de escenario guardada con éxito.", Toast.LENGTH_SHORT).show();
                     }else{
                         Toast.makeText(activityContext, "Ocurrió un error.\nIntentarlo nuevamente.", Toast.LENGTH_SHORT).show();
@@ -130,6 +133,8 @@ public class ConfigurationFragment extends Fragment {
                 }
             }
         });
+
+        crudOperations = new CRUDOperations(new MyDatabase(getContext()));
     }
 
     private Boolean validarDatos(){
