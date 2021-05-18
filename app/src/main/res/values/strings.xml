@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">CRONOS WIFI</string>
 
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="hint_text">Texto</string>
@@ -19,4 +20,13 @@
 
     <string name="navdrawer_open">Abrir navegador</string>
     <string name="navdrawer_close">Cerrar navegador</string>
+
+
+    <string-array name="escenarios_array">
+        <item>Seleccione Escenario</item>
+        <item>Embedded con anillos y llaveros</item>
+        <item>Embedded sin anillos ni llaveros</item>
+        <item>Sin Embedded</item>
+    </string-array>
+
 </resources>

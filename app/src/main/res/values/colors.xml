@@ -726,4 +726,10 @@
     <color name="md_grey_assac">#656262</color>
     <color name="md_black_assac">#211D1D</color>
 
+    <!--    COLORES MIGRACIÓN -->
+    <color name="md_green_migracion_assac">#03C82B</color>
+    <color name="md_yellow_migracion_assac">#FFE529</color>
+    <color name="md_red_migracion_assac">#EC2A2A</color>
+    <color name="md_grey_migracion_assac">#656262</color>
+
 </resources>

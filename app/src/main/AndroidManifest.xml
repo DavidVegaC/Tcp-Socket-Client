@@ -12,13 +12,19 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
     <uses-permission android:name="android.permission.NFC" />
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 
     <application
@@ -41,7 +47,23 @@
         </activity>
 
         <activity android:name=".View.Activity.MainActivity"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape">
+
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="ext"
+                    android:pathPrefix="/peterjohnwelcome.com:nfcapp"
+                    android:scheme="vnd.android.nfc" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.NDEF_DISCOVERED"
+                android:resource="@xml/tech_filter" />
+
+        </activity>
 
     </application>
 

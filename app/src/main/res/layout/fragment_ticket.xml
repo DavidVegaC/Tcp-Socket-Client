@@ -20,6 +20,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <!-- Titulo de Fragmento -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -37,18 +38,22 @@
 
             </LinearLayout>
 
+            <!-- Cuerpo de Fragmento -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:orientation="vertical">
+
+                <!-- Formulario a completar-->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginTop="5dp"
-                    android:gravity="center_horizontal">
+                    android:layout_marginBottom="1dp"
+                    >
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -56,17 +61,19 @@
                         android:gravity="center"
                         android:orientation="horizontal">
                         <LinearLayout
+                            android:id="@+id/btnBuscarTicketFragment"
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:background="@drawable/bg_para_boton"
+
                             android:orientation="vertical">
                             <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:id="@+id/btnBuscarTicketFragment"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginTop="5dp"
                                 android:layout_gravity="center"
-                                android:layout_marginLeft="30dp"
-                                android:layout_marginRight="30dp"
+                                android:layout_marginLeft="15dp"
+                                android:layout_marginRight="15dp"
                                 app:srcCompat="@drawable/ic_search_white_40dp"
                                 tools:ignore="VectorDrawableCompat">
                             </ImageView>
@@ -77,6 +84,7 @@
                                 android:gravity="center_horizontal"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="5dp"
+                                android:textSize="12sp"
                                 android:text="Buscar"></TextView>
                         </LinearLayout>
 
@@ -84,19 +92,97 @@
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:layout_weight="4">
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.3"
+                        android:layout_marginRight="5dp"
+                        android:orientation="horizontal">
+                        <RadioGroup
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/radioGroup">
+
+                            <RadioButton
+                                android:id="@+id/radio1"
+                                android:layout_width="30dp"
+                                android:layout_height="20dp"
+                                android:checked="true"
+                                android:textColor="#ffffff"
+                                android:textSize="10dp" />
+
+                            <RadioButton
+                                android:id="@+id/radio2"
+                                android:layout_width="30dp"
+                                android:layout_height="20dp"
+                                android:layout_marginTop="3dp"
+                                android:checked="false"
+                                android:textColor="#ffffff"/>
+                            <RadioButton
+                                android:id="@+id/radio3"
+                                android:layout_width="30dp"
+                                android:layout_height="20dp"
+                                android:layout_marginTop="3dp"
+                                android:checked="false"
+                                android:textColor="#ffffff"
+                                 />
+                        </RadioGroup>
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:gravity="center"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginTop="1dp"
+                            android:orientation="vertical"
+                            >
+                            <LinearLayout
+                                android:id="@+id/ly_migracion_ambos"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                >
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Ambos"
+                                android:textSize="13sp"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/ly_migracion1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                >
+                                <LinearLayout
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:background="@drawable/bg_para_migracion_3"
+                                    android:orientation="vertical"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/ly_migracion2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                >
+                                <LinearLayout
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:background="@drawable/bg_para_migracion_1"
+                                    android:orientation="vertical"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:layout_marginRight="10dp"
                             android:orientation="horizontal">
                             <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="wrap_content"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
                                 android:gravity="center"
                                 android:orientation="vertical">
                                 <ImageView
@@ -112,13 +198,12 @@
                                     android:text="Ticket"></TextView>
                             </LinearLayout>
                             <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_weight="5"
-                                android:padding="5dp"
-                                android:background="@drawable/bg_para_cajas_de_texto"
+                                android:layout_width="match_parent"
                                 android:layout_height="match_parent"
+                                android:padding="2dp"
+                                android:layout_marginLeft="10dp"
+                                android:background="@drawable/bg_para_cajas_de_texto"
                                 android:gravity="center">
-
                                 <EditText
                                     android:id="@+id/txtTicketFragment"
                                     android:layout_width="match_parent"
@@ -126,20 +211,67 @@
                                     android:layout_marginLeft="10dp"
                                     android:layout_marginRight="10dp"
                                     android:hint="Nro. Ticket"
-                                    android:inputType="text"
+                                    android:inputType="number"
                                     android:maxLength="20"
                                     android:maxLines="1"
                                     android:textColor="@color/md_white_1000"
-                                    android:textColorHint="@color/md_grey_500">
+                                    android:textColorHint="@color/md_grey_500"
+                                    android:textSize="18sp">
 
                                 </EditText>
                             </LinearLayout>
                         </LinearLayout>
 
-                    </LinearLayout>
+                    <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="2.8"
+                            android:orientation="horizontal"
+                            android:layout_marginRight="5dp">
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical">
+                                <ImageView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    app:srcCompat="@drawable/ic_calendar_red_30dp"
+                                    tools:ignore="VectorDrawableCompat">
+                                </ImageView>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Fecha"></TextView>
+                            </LinearLayout>
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginLeft="10dp"
+                                android:padding="2dp"
+                                android:background="@drawable/bg_para_cajas_de_texto"
+                                android:gravity="center">
+                                <EditText
+                                    android:id="@+id/txtDateTransaction"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_marginLeft="10dp"
+                                    android:layout_marginRight="10dp"
+                                    android:hint="dd-mm-yyyy"
+                                    android:inputType="text"
+                                    android:focusable="false"
+                                    android:clickable="true"
+                                    android:maxLines="1"
+                                    android:textColor="@color/md_white_1000"
+                                    android:textColorHint="@color/md_grey_500"
+                                    android:textSize="18sp">
+                                </EditText>
+                            </LinearLayout>
+                        </LinearLayout>
 
                 </LinearLayout>
 
+                <!-- Etiqueta a mostrar si no hay data-->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -148,9 +280,11 @@
                     android:layout_marginTop="10dp"
                     android:text="No existen datos a mostrar"></TextView>
 
+                <!-- Recycler view a mostrar si esw que hay data-->
                 <view class="androidx.recyclerview.widget.RecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
                     android:id="@+id/rvListaTicket"
                     android:scrollbars="vertical">
                 </view>

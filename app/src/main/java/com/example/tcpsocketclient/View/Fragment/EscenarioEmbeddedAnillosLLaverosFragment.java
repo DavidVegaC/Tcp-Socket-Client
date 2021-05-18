@@ -2,20 +2,21 @@ package com.example.tcpsocketclient.View.Fragment;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.Ndef;
+import android.nfc.tech.NfcV;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,65 +27,50 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
-import android.provider.Settings;
-import android.telephony.TelephonyManager;
-import android.text.Layout;
-import android.text.format.Formatter;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.tcpsocketclient.ConnectTask;
+import com.example.tcpsocketclient.Entities.Hose;
 import com.example.tcpsocketclient.Entities.LayoutHoseEntity;
+import com.example.tcpsocketclient.Entities.Maestros;
 import com.example.tcpsocketclient.Entities.TransactionEntity;
 import com.example.tcpsocketclient.R;
 import com.example.tcpsocketclient.Storage.DB.CRUDOperations;
 import com.example.tcpsocketclient.Storage.DB.MyDatabase;
-import com.example.tcpsocketclient.TcpClient;
 import com.example.tcpsocketclient.Util.Bluetooth.PrinterBluetooth;
+import com.example.tcpsocketclient.Util.Bluetooth.ImpresionTicketAsync;
+import com.example.tcpsocketclient.Util.CustomProgressDialog;
 import com.example.tcpsocketclient.Util.Internet.NetworkUtil;
-import com.example.tcpsocketclient.Util.PrinterCommands;
 import com.example.tcpsocketclient.Util.Utils;
 import com.example.tcpsocketclient.Util.Wifi.EmbeddedPtcl;
 import com.example.tcpsocketclient.View.Activity.MainActivity;
+import android.nfc.NdefRecord;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.InetAddress;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.Executor;
-
-import static android.Manifest.permission_group.LOCATION;
 
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link ClientSocketFragment#newInstance} factory method to
+ * Use the {@link EscenarioEmbeddedAnillosLLaverosFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ClientSocketFragment extends Fragment {
+public class EscenarioEmbeddedAnillosLLaverosFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -108,8 +94,8 @@ public class ClientSocketFragment extends Fragment {
     Handler handlerSocket;
     final int handlerState = 0;
     //public static  String SERVER_IP = "192.168.1.126";
-    //public static  String SERVER_IP = "192.168.1.15";
-    public static  String SERVER_IP = "192.168.4.22";
+    public static  String SERVER_IP = "192.168.1.7";
+    //public static  String SERVER_IP = "192.168.4.22";
     public static  int SERVER_PORT = 2230;
 
     private ClientTCPThread clientTCPThread;
@@ -131,13 +117,15 @@ public class ClientSocketFragment extends Fragment {
     //variables para la recepción de bombas activas
     int numBombas=0;
     List<TransactionEntity> hoseEntities = new ArrayList<>();
+    List<Hose> hoseMasters = new ArrayList<>();
+
     private String pintarBytes="";
 
     private NetworkUtil networkUtil;
 
     //private String SSID="TP-LINK_AP_F2D8";
-    //private String SSID="MOVISTAR_1B9E";
-    private String SSID="EMBEDDED";
+    private String SSID="MOVISTAR_1B9E";
+    //private String SSID="EMBEDDED";
     private String Password="123456789";
     //private String Password="6XGE8bA5Ka8oRqzhkfCm";
 
@@ -163,9 +151,7 @@ public class ClientSocketFragment extends Fragment {
 
     CRUDOperations crudOperations;
 
-    private ConnectedThreadPrinter mConnectedThreadPrinter;
     private PrinterBluetooth printerBluetooth;
-    private  byte[] FEED_LINE = {10};
 
     //determina la ejecución o no del hilo clientTCPThread
     public volatile boolean running;
@@ -173,12 +159,22 @@ public class ClientSocketFragment extends Fragment {
     //determina si se puede cambiar a otro fragment
     public volatile boolean changeFragment=true;
 
-    public ClientSocketFragment() {
+    //variable para lectura NFC
+    public NfcAdapter mNfcAdapter;
+    private AlertDialog dialog;
+    private CustomProgressDialog mDialog;
+
+    public static final String MIME_TEXT_PLAIN = "text/plain";
+    public static final String TAG = "NfcTag";
+
+    private final int  escenario=1;
+
+    public EscenarioEmbeddedAnillosLLaverosFragment() {
         // Required empty public constructor
     }
 
-    public static ClientSocketFragment newInstance(String param1, String param2) {
-        ClientSocketFragment fragment = new ClientSocketFragment();
+    public static EscenarioEmbeddedAnillosLLaverosFragment newInstance(String param1, String param2) {
+        EscenarioEmbeddedAnillosLLaverosFragment fragment = new EscenarioEmbeddedAnillosLLaverosFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -252,66 +248,13 @@ public class ClientSocketFragment extends Fragment {
         printerBluetooth = new PrinterBluetooth();
         networkUtil= new NetworkUtil(rootView.getContext());
         crudOperations = new CRUDOperations(new MyDatabase(getContext()));
+        mDialog = new CustomProgressDialog(rootView.getContext());
+
+        //NFC
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(getActivity());
+
     }
 
-    /*public class ConnectThread extends AsyncTask<String, String, TcpClient> {
-        @Override
-        protected TcpClient doInBackground(String... message) {
-
-            //we create a TCPClient object
-            mTcpClient = new TcpClient(new TcpClient.OnMessageReceived() {
-                @Override
-                //here the messageReceived method is implemented
-                public void messageReceived(String message) {
-                    //this method calls the onProgressUpdate
-                    //publishProgress(message);
-                    //String texto = tv1.getText().toString();
-                    //tv1.setText(texto + " " + message);
-                    //Toast.makeText(, "El mensaje está vacio.", Toast.LENGTH_SHORT).show();
-                    //Log.d("Daviddd" , message);
-                    //mensaje = mensaje + " " +message;
-                    //;
-                    if (message == null) {
-                        conexion = false;
-                        mensajeError = mTcpClient.msgError;
-                    } else {
-                        conexion = true;
-                        mensaje = " " + message;
-                    }
-
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Stuff that updates the UI
-                            //tv1.setText(mensaje);
-
-                            if (conexion) {
-                                tv1.append(mensaje);
-                            } else {
-                                Toast.makeText(rootView.getContext(), mensajeError, Toast.LENGTH_SHORT).show();
-                                closeConecction();
-                                edIP.setEnabled(true);
-                                edPort.setEnabled(true);
-                                bt3.setEnabled(true);
-                                bt2.setEnabled(false);
-                            }
-                        }
-                    });
-                }
-            }, strDireccionIP, intPORT,IPLocal);
-            mTcpClient.run();
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d("test", "response " + values[0]);
-            //process server response here....
-        }
-
-    }*/
 
     public void mostrarMensajeUsuario(final String mensaje){
         getActivity().runOnUiThread(new Runnable() {
@@ -571,11 +514,6 @@ public class ClientSocketFragment extends Fragment {
 
     //Verificación de Ubicación
     private void validateLocation(){
-        /*if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.P){
-
-        }else{
-            connectWIFI();
-        }*/
 
         if(estadoGPS()){
             connectWIFI();
@@ -710,6 +648,7 @@ public class ClientSocketFragment extends Fragment {
                     //Log.v("NÚMERO DE BOMBAS", "" + byteArrayToHexInt(numeroBombas,1));
 
                     llenarDatosConfiguracion();
+                    insertarMaestrosSQLite();
                     agregarImagenEstaciones();
                     //inicializarMangueras();
                     clientTCPThread.write(EmbeddedPtcl.b_ext_configuracion); //0x06
@@ -874,14 +813,24 @@ public class ClientSocketFragment extends Fragment {
             pIinicial+=1;
         }
 
+        int auxIdBomba=0;
         for(int i = 0; i< numBombas; i++){
+            Hose hose  = new Hose();
             TransactionEntity transactionEntity = new TransactionEntity();
             transactionEntity.setEstadoRegistro("P");
             //**********************************************************
             //Capturar idBomba
             int[] idBomba = new int[1];
             idBomba[0] = bufferRecepcion[pIinicial];
-            transactionEntity.setIdBomba(Integer.parseInt((byteArrayToHexIntGeneral(idBomba,1))));
+            auxIdBomba=Integer.parseInt((byteArrayToHexIntGeneral(idBomba,1)));
+            transactionEntity.setIdBomba(auxIdBomba);
+            transactionEntity.setNombreManguera(""+auxIdBomba);
+            hose.setHoseNumber(auxIdBomba);
+            hose.setHoseName(""+auxIdBomba);
+            hose.setHardwareId(1);
+            hose.setLastTicket(0);
+            hose.setFuelQuantity(0.0);
+
             //**********************************************************
             //Capturar idProducto
             int[] idProducto = new int[1];
@@ -893,7 +842,7 @@ public class ClientSocketFragment extends Fragment {
             cantidadDecimales[0] = bufferRecepcion[pIinicial + 2];
             transactionEntity.setCantidadDecimales(Integer.parseInt(byteArrayToHexIntGeneral(cantidadDecimales,1)));
             //**********************************************************
-            //Capturar cantidadDecimales
+            //Capturar nombreManguera
             int[] nombreManguera = new int[10];
             int contadorMangueraInicial = pIinicial + 3;
             int contadorMangueraFinal = contadorMangueraInicial + 9;
@@ -903,6 +852,8 @@ public class ClientSocketFragment extends Fragment {
                 contadorIteracionesManguera ++;
             }
             transactionEntity.setNombreManguera(hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
+            Log.v("Nombre Manguera", hexToAscii(byteArrayToHexString(nombreManguera,nombreManguera.length)));
+
             //Capturar nombreProducto
             int[] nombreProducto = new int[10];
             int contadorProductoInicial = pIinicial + 13;
@@ -913,11 +864,22 @@ public class ClientSocketFragment extends Fragment {
                 contadorIteracionesProducto ++;
             }
             transactionEntity.setNombreProducto(hexToAscii(byteArrayToHexString(nombreProducto,nombreProducto.length)));
+            Log.v("Nombre Producto",hexToAscii(byteArrayToHexString(nombreProducto,nombreProducto.length)));
+            hose.setNameProduct(hexToAscii(byteArrayToHexString(nombreProducto,nombreProducto.length)));
 
             hoseEntities.add(transactionEntity);
+            hoseMasters.add(hose);
             pIinicial = pIinicial + 23;
         }
 
+    }
+
+    //INSERTAR MAESTROS SQLITE
+    public void insertarMaestrosSQLite(){
+        Maestros maestros = new Maestros();
+        maestros.setHoses(hoseMasters);
+        crudOperations.clearTablesMasters();
+        crudOperations.insertMastersSQLite(maestros);
     }
 
     //GENERAR MANGUERAS DINAMICAMENTE SEGÚN CANTIDAD DE MANGUERAS
@@ -934,8 +896,18 @@ public class ClientSocketFragment extends Fragment {
             LayoutInflater inflater = LayoutInflater.from(rootView.getContext());
             id = R.layout.layout_hose;
             LinearLayout hoseLayout = (LinearLayout) inflater.inflate(id, null, false);
+            final int finalIdBomba = idBomba;
             txt_nombre = hoseLayout.findViewById(R.id.txt_nombre);
-            txt_nombre.append(String.valueOf(idBomba));
+            txt_nombre.append(""+finalIdBomba);
+            ly_cuadrante = hoseLayout.findViewById(R.id.ly_cuadrante);
+            ly_cuadrante.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //mostrarMensajeUsuario("Clickeo la bomba "+ +" .");
+                    lecturaNFC(finalIdBomba);
+                }
+            });
+
             layout.addView(hoseLayout,i);
             //inflaters.add(hoseLayout);
             LayoutHoseEntity layoutHose = new LayoutHoseEntity(hoseLayout,idBomba);
@@ -945,8 +917,276 @@ public class ClientSocketFragment extends Fragment {
         //hijoLayout++;
     }
 
-    //Cambio de estados de Abastecimiento
+    //consulta pregunta lectura NFC
+    private void lecturaNFC(int idBomba){
+        final TextView myView = new TextView(getContext());
+        myView.setText("¿Seguro leer NFC en la bomba "+ idBomba + "?");
+        myView.setTextSize(15);
 
+        final ImageView imageView = new ImageView(getContext());
+        int img = R.drawable.ic_baseline_white_30;
+        Bitmap bmp = BitmapFactory.decodeResource(getResources(), img);
+        imageView.setImageBitmap(bmp);
+
+        LinearLayout layout1       = new LinearLayout(getContext());
+        layout1.setOrientation(LinearLayout.HORIZONTAL);
+        layout1.addView(imageView);
+        layout1.addView(myView);
+        layout1.setGravity(Gravity.CENTER);
+        //layout1.setBackgroundColor(Color.BLUE);
+        layout1.setMinimumHeight(40);
+
+
+        dialog = new AlertDialog.Builder(getContext(), R.style.AppThemeAssacDialog).create();
+
+        dialog.setTitle("Lectura de NFC");
+        //dialog.setTitle(Html.fromHtml("<font color='#fff'>Impresión de Ticket</font>"));
+        //dialog.setMessage("¿Seguro de imprimir el ticket "+ nroTicket + " ?");
+        dialog.setView(layout1);
+        dialog.setCancelable(false);
+        dialog.setButton(Dialog.BUTTON_POSITIVE, "SI", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //Toast.makeText(getContext(),"OK",Toast.LENGTH_LONG).show();
+                //validarImpresora(lst.get(rvListaTicket.getChildAdapterPosition(v)));
+                //Log.d("David",listTransaction.get(rvListaTicket.getChildAdapterPosition(v)).getPlaca());
+                //new ImpresionTicketAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).execute();
+                if (mNfcAdapter == null) {
+                    // ES NECESARIO QUE EL DISPOSITIVO SOPORTE NFC
+                    mostrarMensajeUsuario("El dispositivo no soporta NFC.");
+                    //finish();
+                    //return;
+                }else{
+                    if (!mNfcAdapter.isEnabled()) {
+                        mostrarMensajeUsuario("Activa NFC en el dispositivo para continuar.");
+                    }else{
+                        mostrarMensajeUsuario("Listo para leer NFC.");
+                        enableForegroundDispatchSystem();
+                    }
+                }
+            }
+        });
+        dialog.setButton(Dialog.BUTTON_NEGATIVE, "NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        dialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onShow(DialogInterface arg0) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(R.color.md_text_white);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(R.color.md_text_white);
+            }
+        });
+        dialog.show();
+
+    }
+
+    public void enableForegroundDispatchSystem() {
+
+            Intent intent = new Intent(getContext(), MainActivity.class).addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, 0);
+
+            IntentFilter[] intentFilters = new IntentFilter[]{};
+
+            mNfcAdapter.enableForegroundDispatch(getActivity(), pendingIntent, intentFilters, null);
+
+    }
+
+    public void processIntent(Intent intent) {
+        Log.v(TAG, "ENTRÓ handleIntent");
+        String action = intent.getAction();
+
+
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+            Log.v(TAG, "ENTRÓ ACTION_NDEF_DISCOVERED");
+            String type = intent.getType();
+            if (MIME_TEXT_PLAIN.equals(type)) {
+
+                Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                //new NdefReaderTask().execute(tag);
+
+            } else {
+                Log.d(TAG, "Wrong mime type: " + type);
+            }
+        } else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
+            Log.v(TAG, "ENTRÓ ACTION_TECH_DISCOVERED");
+            //Toast.makeText(getApplicationContext(),  Toast.LENGTH_LONG).show();
+            mostrarMensajeUsuario("TECH");
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            String[] techList = tag.getTechList();
+            String searchedTech = Ndef.class.getName();
+
+            for (String tech : techList) {
+                if (searchedTech.equals(tech)) {
+                    //new NdefReaderTask().execute(tag);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Stuff that updates the UI
+                            //tv1.setText(mensaje);
+                            new NdefReaderTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        }
+                    });
+                    break;
+                }
+            }
+        }else if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)){
+            Log.v(TAG, "ACTION_TAG_DISCOVERED");
+            //Toast.makeText(getApplicationContext(), "TAG", Toast.LENGTH_LONG).show();
+            mostrarMensajeUsuario("TAG");
+            final Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+
+            //new NdefReaderTask().execute(tag);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Stuff that updates the UI
+                    //tv1.setText(mensaje);
+                    new NdefReaderTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,tag);
+                }
+            });
+        }
+    }
+
+    private class NdefReaderTask extends AsyncTask<Tag, Void, String> {
+        private Boolean readCorrect=true;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mDialog.showProgressDialog("Obteniendo datos por NFC...");
+        }
+
+        @Override
+        protected String doInBackground(Tag... params) {
+            Log.v(TAG, "NdefReaderTask:doInBackground");
+            Tag tag = params[0];
+
+            //LECTURA DE ID
+            String tagInfo = "";
+
+
+            byte[] tagId = tag.getId();
+
+            //LECTURA DE DATOS
+            NfcV tag5 = NfcV.get(tag);
+
+            int blockAddress = 10;
+            byte[] cmd = new byte[] {
+                    (byte)0x20,  // FLAGS
+                    (byte)0x20,  // READ_SINGLE_BLOCK
+                    0, 0, 0, 0, 0, 0, 0, 0, // ID TAG
+                    (byte)(blockAddress & 0x0ff)
+            };
+            //ESCRITURA
+            byte[] cmd5 = new byte[] {
+                    (byte)0x60,  // FLAGS
+                    (byte)0x21,  // WRITE_SINGLE_BLOCK
+                    0, 0, 0, 0, 0, 0, 0, 0, //ID TAG
+                    (byte)(blockAddress & 0x0ff),
+                    (byte)0x4c,  // data block that you want to write (same length as the blocks that you read) Deben ser 4 bytes por bloque
+                    (byte)0x45,
+                    (byte)0x4f,
+                    (byte)0x4f,
+            };
+            System.arraycopy(tagId, 0, cmd5, 2, 8);
+            System.arraycopy(tagId, 0, cmd, 2, 8);
+
+            try {
+                tag5.connect();
+                byte[] responseDataDevice;
+                String responseDataTexto = "";
+                //String tagX = "";
+                String placa =  "";
+                String conductor = "";
+
+                //responseDataDevice = tag5.transceive(cmd);
+                for(int x = 0; x< blockAddress; x++){
+                    byte[] comandos = new byte[] {
+                            (byte)0x20,  // FLAGS
+                            (byte)0x20,  // READ_SINGLE_BLOCK
+                            0, 0, 0, 0, 0, 0, 0, 0,
+                            (byte)(x & 0x0ff)
+                    };
+                    System.arraycopy(tagId, 0, comandos, 2, 8);
+                    responseDataDevice = tag5.transceive(comandos);
+
+                    /*for(int i=1; i<responseDataDevice.length; i++){
+                        tagX +=  Integer.toHexString(responseDataDevice[i] & 0xFF) + " ";
+                    }
+                    tagX += "\n";*/
+                    for(int i=1; i<responseDataDevice.length; i++){
+                        if(x >= 0 && x <= 2 ){
+                            placa += Utils.convertHexToString(Integer.toHexString(responseDataDevice[i] & 0xFF)) + " ";
+                        }
+                        if(x >= 6 && x <= 10){
+                            conductor += Utils.convertHexToString(Integer.toHexString(responseDataDevice[i] & 0xFF)) + " ";
+                        }
+
+                        //tagX +=  convertHexToString(Integer.toHexString(responseDataDevice[i] & 0xFF)) + " ";
+                    }
+
+                    responseDataTexto += Utils.toHex(responseDataDevice) +"\n";
+                    //tagX += "\n";
+                }
+                //Log.v(TAG,tagX += "\n");
+                //tagInfo+= "Datos de Bloques: \n"+ tagX;
+                tagInfo+= "Datos de Bloques: \n"+ "Placa: "+ placa +"\nConductor: "+ conductor;
+                mostrarMensajeUsuario(tagInfo);
+//                String tagX = "";
+//                for(int i=0; i<tagId.length; i++){
+//                    tagX += Integer.toHexString(tagId[i] & 0xFF) + " ";
+//                }
+                Log.v(TAG, tagInfo);
+
+            } catch (IOException e) {
+                //e.printStackTrace();
+                Log.v(TAG, e.getMessage());
+                readCorrect=false;
+            } finally {
+                try {
+                    tag5.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return tagInfo;
+        }
+
+        private String readText(NdefRecord record) throws UnsupportedEncodingException {
+            byte[] payload = record.getPayload();
+            // Codificación
+            String textEncoding;
+            if ((payload[0] & 128) != 0) textEncoding = "UTF-16";
+            else textEncoding = "UTF-8";
+
+            // Lenguaje
+            int languageCodeLength = payload[0] & 0063;
+            return new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            mDialog.dismissProgressDialog();
+            Log.v(TAG, "NdefReaderTask:onPostExecute");
+            if (readCorrect == true) {
+                //Utilizamos el resultado de la tarea asincrona para pasar
+                //asistencia. Podemos ejecutar directamente aqui el
+                //envio de datos al servidor o añadir un botón.
+                Log.v(TAG,result);
+            }else{
+                //Toast.makeText(getApplicationContext(), "No se completó correctamente la lectura por NFC.\n Intentelo nuevamente.", Toast.LENGTH_LONG).show();
+                mostrarMensajeUsuario("No se completó correctamente la lectura por NFC.\nIntentelo nuevamente.");
+            }
+        }
+    }
+
+
+    //Cambio de estados de Abastecimiento
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void cambioEstado(int indiceLayoutHose, int pEstadoActual){
 
@@ -1178,7 +1418,7 @@ public class ClientSocketFragment extends Fragment {
         tramaFechaInicio[0] = bufferRecepcion[15];
         String segundo = "" + byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length);
 
-        String fechaInicio = dia + "/" + mes + "/" + anio + " ";
+        String fechaInicio = dia + "-" + mes + "-" + anio + "";
         String horaInicio =  hora + ":" + minuto + ":" + segundo;
         //fechaInicio = "" + hexToAscii(byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length));
         entity.setFechaInicio(fechaInicio);
@@ -1276,7 +1516,7 @@ public class ClientSocketFragment extends Fragment {
         double kilometro = Double.valueOf(kilometroParteEntera + "."+kilometroParteDecimal);
 
 
-        entity.setKilometraje(kilometro);
+        entity.setKilometraje(""+kilometro);
 
         Log.v("Kilometro",""+kilometro);
 
@@ -1308,7 +1548,7 @@ public class ClientSocketFragment extends Fragment {
             horometro = Double.valueOf(horometroParteEntera + "."+horometroParteDecimal);
         }
 
-        entity.setHorometro(horometro);
+        entity.setHorometro(""+horometro);
 
         Log.v("Horometro",""+horometro);
 
@@ -1504,7 +1744,7 @@ public class ClientSocketFragment extends Fragment {
         tramaFechaFin[0] = bufferRecepcion[121];
         String segundoFin = "" + byteArrayToHexString(tramaFechaFin,tramaFechaFin.length);
 
-        String fechaFin = diaFin + "/" + mesFin + "/" + anioFin + " " ;
+        String fechaFin = diaFin + "-" + mesFin + "-" + anioFin + "" ;
         String horaFin1 = horaFin + ":" + minutoFin + ":" + segundoFin;
         //fechaInicio = "" + hexToAscii(byteArrayToHexString(tramaFechaInicio,tramaFechaInicio.length));
         entity.setFechaFin(fechaFin);
@@ -1541,14 +1781,17 @@ public class ClientSocketFragment extends Fragment {
         txt_ultimo_ticket.setText(entity.getNumeroTransaccion());
         txt_ultimo_ticket_p2.setText(entity.getNumeroTransaccion());
 
+
         guardarTransaccionBD(entity);
 
     }
 
     private void guardarTransaccionBD(TransactionEntity entity){
-        List<TransactionEntity> lst = crudOperations.getTransactionByTransactionAndHose(entity.getNumeroTransaccion());
+        List<TransactionEntity> lst = crudOperations.getTransactionByTransactionAndHose(entity.getNumeroTransaccion(),escenario,"P");
         int resultado = 0;
         if(lst.size() == 0){
+            entity.setEscenario(escenario);
+            entity.setEstadoRegistro("P");
             resultado = crudOperations.addTransaction(entity);
             imprimirTransaccion(entity);
         }
@@ -1559,7 +1802,7 @@ public class ClientSocketFragment extends Fragment {
         /*new Thread(new Runnable() {
             public void run() {
                 try {
-                    new ValidarImpresoraAsync(entity).execute();
+                    new ImpresionTicketAsync(entity).execute();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1571,7 +1814,7 @@ public class ClientSocketFragment extends Fragment {
             public void run() {
                 // Stuff that updates the UI
                 //tv1.setText(mensaje);
-                new ValidarImpresoraAsync(entity).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new ImpresionTicketAsync(entity,printerBluetooth,null,getActivity()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         });
 
@@ -1802,237 +2045,6 @@ public class ClientSocketFragment extends Fragment {
         //return String.format("%.2f", a);
         return "" + x;//form.format(x);
         //return ""+a;
-    }
-
-    public class ValidarImpresoraAsync extends AsyncTask<String,String, Boolean> {
-
-        private TransactionEntity transactionEntity ;
-
-        public ValidarImpresoraAsync(TransactionEntity entity) {
-            super();
-            transactionEntity = entity;
-            // do stuff
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            //mDialog.showProgressDialog("Cargando impresora...");
-            Log.d("David1","holaaa");
-
-        }
-
-        @Override
-        protected Boolean doInBackground(String... params) {
-            Log.d("David2","holaaa");
-            boolean result = false;
-
-            if (printerBluetooth.btAdapter == null) {
-                // Device does not support Bluetooth
-                mostrarMensajeUsuario("Dispositivo no soporta bluetooth.");
-                //getActivity().finish();
-                result=true;
-            }else{
-
-                if(!printerBluetooth.btAdapter.isEnabled()) {
-                    //Log.d(TAG, "enableDisableBT: enabling BT.");
-                   /*Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivity(enableBTIntent);*/
-                    mostrarMensajeUsuario("Favor de activar su Bluetooth.");
-                    result=true;
-                    return  result;
-                }
-                printerBluetooth.cerrarConexionBTSocketImpresora();
-                result = printerBluetooth.crearConexionBTSocketImpresora();
-                if(printerBluetooth.btSocketPrinter.isConnected()){
-                    mConnectedThreadPrinter = new ConnectedThreadPrinter(printerBluetooth.btSocketPrinter);
-                    mConnectedThreadPrinter.start();
-                    imprimirTicket(transactionEntity);
-
-                    try {
-                        Thread.sleep(2000);
-                        printerBluetooth.cerrarConexionBTSocketImpresora();
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return result;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d("test", "response " + values[0]);
-            //process server response here....
-        }
-
-        @Override
-        protected void onPostExecute(Boolean s) {
-            //mDialog.dismissProgressDialog();
-            if(!s){
-                //Toast.makeText(getContext(),"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
-                mostrarMensajeUsuario("No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.");
-            }
-            Log.v("Daviddd","99999");
-        }
-
-    }
-
-    private class ConnectedThreadPrinter extends Thread {
-
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        //creation of the connect thread
-        public ConnectedThreadPrinter(BluetoothSocket socket) {
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                //Create I/O streams for connection
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage());
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            int bytes;
-            byte[] buffer = new byte[256];
-
-            // Keep looping to listen for received messages
-            while (true) {
-
-            }
-        }
-
-        //write method
-        public void write(String msg) {
-            Log.d("Javier","22222");
-            int longitud=0;
-
-            try {
-                mmOutStream.write(msg.getBytes());
-                //timerNoComunicacion(1500);
-            } catch (IOException e) {
-                //if you cannot write, close the application
-                Toast.makeText(getActivity(), "La Conexión falló", Toast.LENGTH_LONG).show();
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
-                //mListener.goToBluetoothConfiguration();
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-
-        }
-        //write method
-        public void write(byte[] msg) {
-            Log.d("Javier","1111");
-            int longitud=0;
-
-            try {
-                mmOutStream.write(msg);
-                //timerNoComunicacion(1500);
-            } catch (IOException e) {
-                //if you cannot write, close the application
-                Toast.makeText(getActivity(), "La Conexión falló", Toast.LENGTH_LONG).show();
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
-                //mListener.goToBluetoothConfiguration();
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-        }
-    }
-
-    //metodos impresión
-    private void imprimirTicket(TransactionEntity entity){
-        Log.d("Leo11","11111");
-        String CurrentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
-        /*printUnicodeC();
-        printText("Estacion: Pionero" );*/
-        printLogoASSAC();
-        printUnicodeC1();
-        printText("Generado el " +CurrentDate);
-        printUnicodeC2();
-        printText("Estacion: Pionero" );
-        printText("Despacho: Automatico");
-        printUnicodeC2();
-        printText("Ticket: " +entity.getNumeroTransaccion());
-        printText("Fecha: " +entity.getFechaInicio());
-        printText("Inicio: " +entity.getHoraInicio());
-        printText("Fin: " +entity.getHoraFin());
-        printUnicodeC2();
-        printText("Bomba: " +entity.getIdBomba());
-        printText("Galones: " +entity.getVolumen());
-        printUnicodeC2();
-        printText("Placa: " +entity.getPlaca());
-        printText("Producto: " +entity.getNombreProducto());
-        printUnicodeC1();
-        printNewLine();
-        printNewLine();
-        Log.d("Leo11","22222");
-    }
-
-    private void printUnicodeC(){
-        printText(Utils.UNICODE_TEXT);
-    }
-
-    private void printUnicodeC1(){
-        printText(Utils.UNICODE_TEXT_3D);
-    }
-
-    private void printUnicodeC2(){
-        printText(Utils.UNICODE_TEXT_2D);
-    }
-
-    //print text
-    private void printText(String msg) {
-        // Print normal text
-        mConnectedThreadPrinter.write(msg);
-        printNewLine();
-
-    }
-    //print byte[]
-    private void printText(byte[] msg) {
-        // Print normal text
-        mConnectedThreadPrinter.write(msg);
-        printNewLine();
-    }
-    //print new line
-    private void printNewLine() {
-        mConnectedThreadPrinter.write(FEED_LINE);
-
-    }
-
-    //print photo
-    public void printLogoASSAC() {
-        int img = R.drawable.logo_assac_gcm_blanco_negro_128px;
-        try {
-            Bitmap bmp = BitmapFactory.decodeResource(getResources(),
-                    img);
-            if(bmp!=null){
-                byte[] command = Utils.decodeBitmap(bmp);
-                mConnectedThreadPrinter.write(PrinterCommands.ESC_ALIGN_CENTER);
-                printText(command);
-            }else{
-                Log.e("Print Photo error", "the file isn't exists");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("PrintTools", "the file isn't exists");
-        }
     }
 
     @Override

@@ -4,9 +4,10 @@ import java.io.Serializable;
 
 public class TransactionEntity implements Serializable {
 
-
     public int idSqlite;
     public int idTransaction;
+
+    public int idHardware;
 
     public int idBomba;
     public int numeroBomba;
@@ -39,10 +40,10 @@ public class TransactionEntity implements Serializable {
     public String placa;
 
 
-    //public String kilometraje;
-    //public String horometro;
-    public Double kilometraje;
-    public Double horometro;
+    public String kilometraje;
+    public String horometro;
+    //public Double kilometraje;
+    //public Double horometro;
 
 
     //public String turno;
@@ -80,6 +81,13 @@ public class TransactionEntity implements Serializable {
     public String idUsuarioRegistro;
     public String estadoRegistro;
     public String estadoMigracion;
+    public int escenario;
+
+    public String contometroInicial;
+    public String contometroFinal;
+
+    public String imageUri;
+    public String imageDecodeString;
 
     public TransactionEntity() {
     }
@@ -99,6 +107,15 @@ public class TransactionEntity implements Serializable {
     public void setIdTransaction(int idTransaction) {
         this.idTransaction = idTransaction;
     }
+
+    public int getIdHardware() {
+        return idHardware;
+    }
+
+    public void setIdHardware(int idHardware) {
+        this.idHardware = idHardware;
+    }
+
 
     public int getIdBomba() {
         return idBomba;
@@ -244,19 +261,19 @@ public class TransactionEntity implements Serializable {
         this.placa = placa;
     }
 
-    public Double getKilometraje() {
+    public String getKilometraje() {
         return kilometraje;
     }
 
-    public void setKilometraje(Double kilometraje) {
+    public void setKilometraje(String kilometraje) {
         this.kilometraje = kilometraje;
     }
 
-    public Double getHorometro() {
+    public String getHorometro() {
         return horometro;
     }
 
-    public void setHorometro(Double horometro) {
+    public void setHorometro(String horometro) {
         this.horometro = horometro;
     }
 
@@ -402,5 +419,45 @@ public class TransactionEntity implements Serializable {
 
     public void setEstadoMigracion(String estadoMigracion) {
         this.estadoMigracion = estadoMigracion;
+    }
+
+    public int getEscenario() {
+        return escenario;
+    }
+
+    public void setEscenario(int escenario) {
+        this.escenario = escenario;
+    }
+
+    public String getContometroInicial() {
+        return contometroInicial;
+    }
+
+    public void setContometroInicial(String contometroInicial) {
+        this.contometroInicial = contometroInicial;
+    }
+
+    public String getContometroFinal() {
+        return contometroFinal;
+    }
+
+    public void setContometroFinal(String contometroFinal) {
+        this.contometroFinal = contometroFinal;
+    }
+
+    public String getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
+    }
+
+    public String getImageDecodeString() {
+        return imageDecodeString;
+    }
+
+    public void setImageDecodeString(String imageDecodeString) {
+        this.imageDecodeString = imageDecodeString;
     }
 }

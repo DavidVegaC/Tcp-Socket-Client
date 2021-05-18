@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="10dp"
@@ -21,14 +22,20 @@
         android:orientation="vertical"
         android:scrollbars="vertical">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
+        <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="8"
+                >
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/ic_ticket_red_30dp"></ImageView>
+                    app:srcCompat="@drawable/ic_ticket_red_30dp"
+                    tools:ignore="VectorDrawableCompat"></ImageView>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -38,73 +45,123 @@
                     android:id="@+id/txtCabecera"
                     android:text="Ticket"></TextView>
             </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:layout_weight="1"
+                >
+                <LinearLayout
+                    android:id="@+id/ly_migracion_estado"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:background="@drawable/bg_para_migracion_inactivo"
+                    android:orientation="vertical"/>
+            </LinearLayout>
+
+            </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:background="@color/md_grey_600">
-
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/md_black_1000"
-                android:text="Fecha: "></TextView>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textColor="@color/md_black_1000"
-                android:id="@+id/txtFechaTransaccion"
-                android:text=""></TextView>
-        </LinearLayout>
+                android:layout_weight="7"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_black_1000"
+                        android:text="Fecha: "></TextView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textColor="@color/md_black_1000"
+                        android:id="@+id/txtFechaTransaccion"
+                        android:text=""></TextView>
+                </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/md_black_1000"
-                android:text="Cantidad: "></TextView>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textColor="@color/md_black_1000"
-                android:id="@+id/txtCantidadGalones"
-                android:text=""></TextView>
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_black_1000"
+                        android:text="Cantidad: "></TextView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textColor="@color/md_black_1000"
+                        android:id="@+id/txtCantidadGalones"
+                        android:text=""></TextView>
+                </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/md_black_1000"
-                android:text="Placa: "></TextView>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textColor="@color/md_black_1000"
-                android:id="@+id/txtPlaca"
-                android:text=""></TextView>
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_black_1000"
+                        android:text="Placa: "></TextView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textColor="@color/md_black_1000"
+                        android:id="@+id/txtPlaca"
+                        android:text=""></TextView>
+                </LinearLayout>
+            </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_weight="1">
+                <LinearLayout
+                    android:id="@+id/lyVerFotoVehiculo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_para_boton"
+                    android:onClick="onClick"
+                    android:orientation="vertical">
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginLeft="30dp"
+                        android:layout_marginRight="30dp"
+                        app:srcCompat="@drawable/ic_photo_20"
+                        tools:ignore="VectorDrawableCompat">
+                    </ImageView>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
 
     </LinearLayout>
 

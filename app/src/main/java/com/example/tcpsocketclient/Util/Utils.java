@@ -1,8 +1,14 @@
 package com.example.tcpsocketclient.Util;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +33,10 @@ public class Utils {
             0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,
             0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,0x2D, 0x2D, 0x2D,
             0x2D, 0x2D, 0x2D};
+
+    public static final byte[] ALIGN_LEFT =new byte[]{0x1B, 'a',0x00};
+    public static final byte[] ALIGN_CENTER =new byte[]{0x1B, 'a', 0x01};
+    public static final byte[] ALIGN_RIGHT =new byte[]{0x1B, 'a', 0x02};
 
     private static String hexStr = "0123456789ABCDEF";
     private static String[] binaryArray = { "0000", "0001", "0010", "0011",
@@ -175,5 +185,63 @@ public class Utils {
 
     private static byte charToByte(char c) {
         return (byte) "0123456789ABCDEF".indexOf(c);
+    }
+
+    //Para NFC
+
+    public static String convertHexToString(String hex){
+
+        StringBuilder sb = new StringBuilder();
+        StringBuilder temp = new StringBuilder();
+
+        //49204c6f7665204a617661 split into two characters 49, 20, 4c...
+        for( int i=0; i<hex.length()-1; i+=2 ){
+
+            //grab the hex in pairs
+            String output = hex.substring(i, (i + 2));
+            //convert hex to decimal
+            int decimal = Integer.parseInt(output, 16);
+            //convert the decimal to character
+            sb.append((char)decimal);
+
+            temp.append(decimal);
+        }
+        System.out.println("Decimal : " + temp.toString());
+
+        return sb.toString();
+    }
+
+    public static String toHex(byte[] bytes){
+        StringBuilder sb = new StringBuilder();
+        for(int i = bytes.length -1; i >= 0; i--){
+            int b = bytes[i] & 0xff;
+            if(b < 0x10)
+                sb.append('0');
+            sb.append(Integer.toHexString(b));
+            if(i > 0){
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
+    }
+
+    //Para Foto
+    public static String getStringImagen(Context context,Uri imageUri){
+        String encodedImagen="";
+
+        try
+        {
+            Bitmap bmp = MediaStore.Images.Media.getBitmap(context.getContentResolver(),imageUri);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bmp.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+            byte[] imageBytes = baos.toByteArray();
+            //byte[] imageBytes = decodeBitmap(bmp);
+            encodedImagen = Base64.encodeToString(imageBytes,Base64.DEFAULT);
+        }catch(Exception e){
+            //Toast.makeText(rootView.getContext(), "Error: "+ e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.v("Parseando Imagen", e.getMessage());
+        }
+
+        return encodedImagen;
     }
 }

@@ -74,6 +74,35 @@
                 android:layout_marginBottom="1dp"></LinearLayout>
 
             <LinearLayout
+                android:id="@+id/btnPreCierre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_work_off_white_30"
+                    tools:ignore="VectorDrawableCompat"></ImageView>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:text="Pre-Cierre"></TextView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@color/md_white_1000"
+                android:layout_marginTop="1dp"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginBottom="1dp"></LinearLayout>
+
+
+            <LinearLayout
                 android:id="@+id/btnReconocerVoz"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ly_manguera_pre_cierre"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@color/md_black_1000"
+    >
+
+    <TextView
+        android:id="@+id/ticket_Transaccion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:text="TICKET"
+        />
+
+    <TextView
+        android:id="@+id/placa_transaccion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:text="EQUIPO"
+        android:gravity="center_horizontal" />
+
+    <TextView
+        android:id="@+id/galones_transaccion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:text="CANTIDAD"
+        android:gravity="end" />
+
+</LinearLayout>

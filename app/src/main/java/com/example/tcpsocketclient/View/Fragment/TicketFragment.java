@@ -2,19 +2,19 @@ package com.example.tcpsocketclient.View.Fragment;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -25,9 +25,11 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,21 +38,14 @@ import com.example.tcpsocketclient.Entities.TransactionEntity;
 import com.example.tcpsocketclient.R;
 import com.example.tcpsocketclient.Storage.DB.CRUDOperations;
 import com.example.tcpsocketclient.Storage.DB.MyDatabase;
+import com.example.tcpsocketclient.Util.Bluetooth.ImpresionTicketAsync;
 import com.example.tcpsocketclient.Util.Bluetooth.PrinterBluetooth;
 import com.example.tcpsocketclient.Util.CustomProgressDialog;
-import com.example.tcpsocketclient.Util.PrinterCommands;
-import com.example.tcpsocketclient.Util.Utils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -70,30 +65,44 @@ public class TicketFragment extends Fragment {
 
     private ViewGroup rootView;
 
-    private ConnectedThreadPrinter mConnectedThreadPrinter;
-    private static String  MAC_PRINTER = "DC:0D:30:87:1C:80";
-    //private static String  MAC_PRINTER = "DC:0D:30:87:17:FC";
-    private static final UUID BTMODULEUUID_PRINTER = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private byte[] FEED_LINE = {10};
     private PrinterBluetooth printerBluetooth;
+    private int escenario=0;
 
     SwipeRefreshLayout SwipeTicketFragment;
-    ImageView btnBuscarTicketFragment;
+    LinearLayout btnBuscarTicketFragment;
     EditText txtTicketFragment;
+    EditText txtDateTransaction;
     TextView txtMensajeTickets;
+    RadioButton radio1,radio2,radio3;
     RecyclerView rvListaTicket;
+
     AlertDialog dialog;
     CustomProgressDialog mDialog;
-    ValidarImpresoraAsync validarImpresoraAsync;
+    ImpresionTicketAsync impresionTicketAsync;
 
     CRUDOperations crudOperations;
 
+    LinearLayout ly_migracion_ambos,ly_migracion1, ly_migracion2;
+
     Thread thread;
     Handler handler = new Handler();
+    private FragmentActivity fragmentActivity;
+
     //List<TransactionEntity> listTransaction = null;
+
+    private ViewImageExtended viewImageExtended;
 
     public TicketFragment() {
         // Required empty public constructor
+    }
+
+    public TicketFragment(FragmentActivity fragmentActivity) {
+        this.fragmentActivity=fragmentActivity;
+    }
+
+    public TicketFragment(FragmentActivity fragmentActivity, int escenario) {
+        this.fragmentActivity=fragmentActivity;
+        this.escenario=escenario;
     }
 
     /**
@@ -135,58 +144,92 @@ public class TicketFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-//
-//        btnImprimirTicketM1 = (Button) getView().findViewById(R.id.btnImprimirTicketM1);
-//        btnAbrirCnImpresora = (Button) getView().findViewById(R.id.btnAbrirCnImpresora);
+
+        initComponent();
+
+        loadTransaction();
+
+    }
 
 
+    private void initComponent(){
         SwipeTicketFragment =  rootView.findViewById(R.id.SwipeTicketFragment);
         btnBuscarTicketFragment =  rootView.findViewById(R.id.btnBuscarTicketFragment);
         txtTicketFragment =  rootView.findViewById(R.id.txtTicketFragment);
         txtMensajeTickets =  rootView.findViewById(R.id.txtMensajeTickets);
+
+        radio1 =  rootView.findViewById(R.id.radio1);
+        radio2 =  rootView.findViewById(R.id.radio2);
+        radio3 =  rootView.findViewById(R.id.radio3);
+
+        txtDateTransaction = rootView.findViewById(R.id.txtDateTransaction);
+        txtDateTransaction.setText(new SimpleDateFormat("dd-MM-yyyy").format(new Date()));
 
         rvListaTicket =  rootView.findViewById(R.id.rvListaTicket);
         rvListaTicket.setHasFixedSize(true);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvListaTicket.setLayoutManager(llm);
         crudOperations = new CRUDOperations(new MyDatabase(getContext()));
-
         mDialog = new CustomProgressDialog(getContext());
 
-        loadTransaction();
+        printerBluetooth = new PrinterBluetooth();
+
+        ly_migracion_ambos = rootView.findViewById(R.id.ly_migracion_ambos);
+        ly_migracion1 = rootView.findViewById(R.id.ly_migracion1);
+        ly_migracion2 = rootView.findViewById(R.id.ly_migracion2);
+
         SwipeTicketFragment.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 loadTransaction();
             }
         });
+
         btnBuscarTicketFragment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 loadTransaction();
+            }
+        });
+
+        txtDateTransaction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(fragmentActivity, "Holaaa", Toast.LENGTH_SHORT).show();
+                showDatePickerDialog(txtDateTransaction);
+            }
+        });
+
+        ly_migracion_ambos.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                radio1.setChecked(true);
+            }
+        });
+
+        ly_migracion1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                radio2.setChecked(true);
 
             }
         });
 
-        printerBluetooth = new PrinterBluetooth();
+        ly_migracion2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                radio3.setChecked(true);
+            }
+        });
 
-//
-//        btnAbrirCnImpresora.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                crearConexionBTSocketImpresora();
-//            }
-//        });
-//
-//        btnCerrarCnImpresora.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                cerrarConexionBTSocketImpresora();
-//            }
-//        });
 
-        //crearConexionBTSocketImpresora();
+
     }
+
+    public void setEscenario(int escenario){
+        this.escenario=escenario;
+    }
+
 
     public void mostrarMensajeUsuario(final String mensaje){
         getActivity().runOnUiThread(new Runnable() {
@@ -230,70 +273,100 @@ public class TicketFragment extends Fragment {
         hoseEntity.setNombreProducto("D2");
         listTransaction.add(hoseEntity);*/
         //crudOperations.addTransaction(hoseEntity);
+
+        int estadoMigracionTransaccion=0;
+
+        if(radio1.isChecked()){
+            estadoMigracionTransaccion=0;
+        }else if(radio2.isChecked()){
+            estadoMigracionTransaccion=1;
+        }else if(radio3.isChecked()){
+            estadoMigracionTransaccion=2;
+        }
+
         String pNroTransaccion = txtTicketFragment.getText().toString().trim();
-        final List<TransactionEntity> lst =crudOperations.getTransaction(pNroTransaccion);
+        String fechaTransaccion = txtDateTransaction.getText().toString().trim();
+
+        //final List<TransactionEntity> lst =crudOperations.getTransaction(pNroTransaccion, escenario,"P");
+
+        Log.v("Parametros ", estadoMigracionTransaccion + " - "+pNroTransaccion+" - "+fechaTransaccion);
+
+        final List<TransactionEntity> lst =crudOperations.getTransactionforDuplicateTicket(pNroTransaccion, fechaTransaccion,estadoMigracionTransaccion,"P",escenario);
+
 
         if(lst.size()> 0){
             txtMensajeTickets.setVisibility(View.GONE);
             rvListaTicket.setVisibility(View.VISIBLE);
-            RVAdapterForTransaction adapter = new RVAdapterForTransaction(lst);
+            final RVAdapterForTransaction adapter = new RVAdapterForTransaction(lst);
             adapter.setOnClickListener(new View.OnClickListener(){
+
                 @Override
                 public void onClick(final View v) {
-                    String nroTicket = "" + lst.get(rvListaTicket.getChildAdapterPosition(v)).getNumeroTransaccion();
 
-                    final TextView myView = new TextView(getContext());
-                    myView.setText("¿Seguro de imprimir el ticket "+ nroTicket + " ?");
-                    myView.setTextSize(15);
+                    if(v.getId()==R.id.lyVerFotoVehiculo){
+                        Log.v("Foto",""+Integer.parseInt(v.getTag().toString()));
+                        String imageUri = lst.get(Integer.parseInt(v.getTag().toString())).getImageUri();
+                        if(imageUri!= null)
+                            mostrarImagenExtendida(Uri.parse(imageUri));
+                        else
+                            Toast.makeText(getContext(),"No se ha detectado foto guardada.",Toast.LENGTH_LONG).show();
 
-                    final ImageView imageView = new ImageView(getContext());
-                    int img = R.drawable.ic_baseline_white_30;
-                    Bitmap bmp = BitmapFactory.decodeResource(getResources(), img);
-                    imageView.setImageBitmap(bmp);
+                    }else {
+                        String nroTicket = "" + lst.get(rvListaTicket.getChildAdapterPosition(v)).getNumeroTransaccion();
 
-                    LinearLayout layout1       = new LinearLayout(getContext());
-                    layout1.setOrientation(LinearLayout.HORIZONTAL);
-                    layout1.addView(imageView);
-                    layout1.addView(myView);
-                    layout1.setGravity(Gravity.CENTER);
-                    //layout1.setBackgroundColor(Color.BLUE);
-                    layout1.setMinimumHeight(40);
+                        final TextView myView = new TextView(getContext());
+                        myView.setText("¿Seguro de imprimir el ticket " + nroTicket + " ?");
+                        myView.setTextSize(15);
+
+                        final ImageView imageView = new ImageView(getContext());
+                        int img = R.drawable.ic_baseline_white_30;
+                        Bitmap bmp = BitmapFactory.decodeResource(getResources(), img);
+                        imageView.setImageBitmap(bmp);
+
+                        LinearLayout layout1 = new LinearLayout(getContext());
+                        layout1.setOrientation(LinearLayout.HORIZONTAL);
+                        layout1.addView(imageView);
+                        layout1.addView(myView);
+                        layout1.setGravity(Gravity.CENTER);
+                        //layout1.setBackgroundColor(Color.BLUE);
+                        layout1.setMinimumHeight(40);
 
 
-                    dialog = new AlertDialog.Builder(getContext(), R.style.AppThemeAssacDialog).create();
+                        dialog = new AlertDialog.Builder(getContext(), R.style.AppThemeAssacDialog).create();
 
-                    dialog.setTitle("Impresión de Ticket");
-                    //dialog.setTitle(Html.fromHtml("<font color='#fff'>Impresión de Ticket</font>"));
-                    //dialog.setMessage("¿Seguro de imprimir el ticket "+ nroTicket + " ?");
-                    dialog.setView(layout1);
-                    dialog.setCancelable(false);
-                    dialog.setButton(Dialog.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Toast.makeText(getContext(),"OK",Toast.LENGTH_LONG).show();
-                            //validarImpresora(lst.get(rvListaTicket.getChildAdapterPosition(v)));
-                            //Log.d("David",listTransaction.get(rvListaTicket.getChildAdapterPosition(v)).getPlaca());
-                            //new ValidarImpresoraAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).execute();
-                            new ValidarImpresoraAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                        }
-                    });
-                    dialog.setButton(Dialog.BUTTON_NEGATIVE, "Cancelar", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Toast.makeText(getContext(),"CANCEL",Toast.LENGTH_LONG).show();
+                        dialog.setTitle("Impresión de Ticket");
+                        //dialog.setTitle(Html.fromHtml("<font color='#fff'>Impresión de Ticket</font>"));
+                        //dialog.setMessage("¿Seguro de imprimir el ticket "+ nroTicket + " ?");
+                        dialog.setView(layout1);
+                        dialog.setCancelable(false);
+                        dialog.setButton(Dialog.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //Toast.makeText(getContext(),"OK",Toast.LENGTH_LONG).show();
+                                //validarImpresora(lst.get(rvListaTicket.getChildAdapterPosition(v)));
+                                //Log.d("David",listTransaction.get(rvListaTicket.getChildAdapterPosition(v)).getPlaca());
+                                //new ImpresionTicketAsync(lst.get(rvListaTicket.getChildAdapterPosition(v))).execute();
+                                new ImpresionTicketAsync(lst.get(rvListaTicket.getChildAdapterPosition(v)), printerBluetooth, mDialog, getActivity()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                            }
+                        });
+                        dialog.setButton(Dialog.BUTTON_NEGATIVE, "Cancelar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //Toast.makeText(getContext(),"CANCEL",Toast.LENGTH_LONG).show();
 
-                        }
-                    });
+                            }
+                        });
 
-                    dialog.setOnShowListener( new DialogInterface.OnShowListener() {
-                        @SuppressLint("ResourceAsColor")
-                        @Override
-                        public void onShow(DialogInterface arg0) {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(R.color.md_text_white);
-                            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(R.color.md_text_white);
-                        }
-                    });
-                    dialog.show();
+                        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                            @SuppressLint("ResourceAsColor")
+                            @Override
+                            public void onShow(DialogInterface arg0) {
+                                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(R.color.md_text_white);
+                                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(R.color.md_text_white);
+                            }
+                        });
+                        dialog.show();
+                    }
                 }
             });
             rvListaTicket.setAdapter(adapter);
@@ -305,238 +378,35 @@ public class TicketFragment extends Fragment {
         SwipeTicketFragment.setRefreshing(false);
     }
 
-    public class ValidarImpresoraAsync extends AsyncTask<String,String, Boolean> {
-
-        private TransactionEntity transactionEntity ;
-
-        public ValidarImpresoraAsync(TransactionEntity entity) {
-            super();
-            transactionEntity = entity;
-            // do stuff
+    private void mostrarImagenExtendida(Uri imageUri){
+        if(viewImageExtended == null || viewImageExtended.getDialog() == null || !viewImageExtended.getDialog().isShowing()){
+            // Si estas en un fragment y pasaste el activity en el constructor
+            FragmentManager fm = fragmentActivity.getSupportFragmentManager();
+            Bundle arguments = new Bundle();
+            // Aqui le pasas el bitmap de la imagen
+            arguments.putParcelable("PICTURE_SELECTED", imageUri);
+            viewImageExtended = ViewImageExtended.newInstance(arguments);
+            viewImageExtended.show(fm, "ViewImageExtended");
         }
+    }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mDialog.showProgressDialog("Cargando impresora...");
-            Log.d("David1","holaaa");
-        }
+    private void showDatePickerDialog(final EditText etDate) {
+        final Calendar c = Calendar.getInstance();
+        int mYear, mMonth, mDay, mHour, mMinute;
+        mYear = c.get(Calendar.YEAR);
+        mMonth = c.get(Calendar.MONTH);
+        mDay = c.get(Calendar.DAY_OF_MONTH);
 
-
-        @Override
-        protected Boolean doInBackground(String... params) {
-            Log.d("David2","holaaa");
-            boolean result = false;
-
-            if (printerBluetooth.btAdapter == null) {
-                // Device does not support Bluetooth
-                //Toast.makeText(rootView.getContext(), "Dispositivo no soporta bluetooth.", Toast.LENGTH_SHORT).show();
-                mostrarMensajeUsuario("Dispositivo no soporta bluetooth.");
-                //getActivity().finish();
-                result=true;
-            }else{
-
-                if(!printerBluetooth.btAdapter.isEnabled()) {
-                    //Log.d(TAG, "enableDisableBT: enabling BT.");
-                   /*Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivity(enableBTIntent);*/
-                    mostrarMensajeUsuario("Favor de activar su Bluetooth.");
-                    result=true;
-                    return  result;
-                }
-
-                printerBluetooth.cerrarConexionBTSocketImpresora();
-                result = printerBluetooth.crearConexionBTSocketImpresora();
-                if(printerBluetooth.btSocketPrinter.isConnected()){
-                    mConnectedThreadPrinter = new TicketFragment.ConnectedThreadPrinter(printerBluetooth.btSocketPrinter);
-                    mConnectedThreadPrinter.start();
-                    imprimirTicket(transactionEntity);
-
-                    try {
-                        Thread.sleep(2000);
-                        printerBluetooth.cerrarConexionBTSocketImpresora();
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+        DatePickerDialog datePickerDialog = new DatePickerDialog(getActivity(),
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year,
+                                          int month, int day) {
+                        final String selectedDate = String.format("%02d",day) + "-" + String.format("%02d",(month+1))+ "-" + year;
+                        etDate.setText(selectedDate);
                     }
-                }
-            }
-
-            return result;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d("test", "response " + values[0]);
-            //process server response here....
-        }
-
-        @Override
-        protected void onPostExecute(Boolean s) {
-            mDialog.dismissProgressDialog();
-            if(!s){
-                Toast.makeText(getContext(),"No se puede conectar con la impresora identificada con MAC: "+ printerBluetooth.MAC_PRINTER + ". Favor de validar si está encendida o ha sido previamente configurada.",Toast.LENGTH_LONG).show();
-            }
-            Log.v("Daviddd","99999");
-        }
-
-
+                }, mYear, mMonth, mDay);
+        datePickerDialog.show();
     }
-
-    private void imprimirTicket(TransactionEntity entity){
-        Log.d("Leo11","11111");
-        String CurrentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
-        /*printUnicodeC();
-        printText("Estacion: Pionero" );*/
-        printLogoASSAC();
-        printUnicodeC1();
-        printText("Generado el " +CurrentDate);
-        printUnicodeC2();
-        printText("Estacion: Pionero" );
-        printText("Despacho: Automatico");
-        printUnicodeC2();
-        printText("Ticket: " +entity.getNumeroTransaccion());
-        printText("Fecha: " +entity.getFechaInicio());
-        printText("Inicio: " +entity.getHoraInicio());
-        printText("Fin: " +entity.getHoraFin());
-        printUnicodeC2();
-        printText("Bomba: " +entity.getIdBomba());
-        printText("Galones: " +entity.getVolumen());
-        printUnicodeC2();
-        printText("Placa: " +entity.getPlaca());
-        printText("Producto: " +entity.getNombreProducto());
-        printUnicodeC1();
-        printNewLine();
-        printNewLine();
-        Log.d("Leo11","22222");
-    }
-
-    private void printUnicodeC(){
-        printText(Utils.UNICODE_TEXT);
-    }
-
-    private void printUnicodeC1(){
-        printText(Utils.UNICODE_TEXT_3D);
-    }
-
-    private void printUnicodeC2(){
-        printText(Utils.UNICODE_TEXT_2D);
-    }
-
-    //print text
-    private void printText(String msg) {
-        // Print normal text
-        mConnectedThreadPrinter.write(msg);
-        printNewLine();
-
-    }
-    //print byte[]
-    private void printText(byte[] msg) {
-        // Print normal text
-        mConnectedThreadPrinter.write(msg);
-        printNewLine();
-    }
-    //print new line
-    private void printNewLine() {
-        mConnectedThreadPrinter.write(FEED_LINE);
-
-    }
-
-    //print photo
-    public void printLogoASSAC() {
-        int img = R.drawable.logo_assac_gcm_blanco_negro_128px;
-        try {
-            Bitmap bmp = BitmapFactory.decodeResource(getResources(),
-                    img);
-            if(bmp!=null){
-                byte[] command = Utils.decodeBitmap(bmp);
-                mConnectedThreadPrinter.write(PrinterCommands.ESC_ALIGN_CENTER);
-                printText(command);
-            }else{
-                Log.e("Print Photo error", "the file isn't exists");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("PrintTools", "the file isn't exists");
-        }
-    }
-
-
-    private class ConnectedThreadPrinter extends Thread {
-
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        //creation of the connect thread
-        public ConnectedThreadPrinter(BluetoothSocket socket) {
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                //Create I/O streams for connection
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+e.getMessage());
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            int bytes;
-            byte[] buffer = new byte[256];
-
-            // Keep looping to listen for received messages
-            while (true) {
-
-            }
-        }
-
-        //write method
-        public void write(String msg) {
-            Log.d("Javier","22222");
-            int longitud=0;
-
-            try {
-                mmOutStream.write(msg.getBytes());
-                //timerNoComunicacion(1500);
-            } catch (IOException e) {
-                //if you cannot write, close the application
-                Toast.makeText(getActivity(), "La Conexión falló", Toast.LENGTH_LONG).show();
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
-                //mListener.goToBluetoothConfiguration();
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-
-        }
-        //write method
-        public void write(byte[] msg) {
-            Log.d("Javier","1111");
-            int longitud=0;
-
-            try {
-                mmOutStream.write(msg);
-                //timerNoComunicacion(1500);
-            } catch (IOException e) {
-                //if you cannot write, close the application
-                Toast.makeText(getActivity(), "La Conexión falló", Toast.LENGTH_LONG).show();
-                //Const.saveErrorData(getActivity(),new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage(),"1");
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread.write / mensaje: "+e.getMessage());
-                //mListener.goToBluetoothConfiguration();
-            }catch (Exception ex){
-                Log.e(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()),"método: ConnectedThread / mensaje: "+ex.getMessage());
-            }
-        }
-    }
-
 
 }

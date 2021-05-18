@@ -1,6 +1,7 @@
 package com.example.tcpsocketclient.Util;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -47,7 +48,10 @@ public class NavigationFragment {
                                    boolean backStack, CustomAnimation customAnimation)
     {
         if(!newFragment.isVisible()) {
-            if (args != null) newFragment.setArguments(args);
+            if (args != null) {
+                Log.v("addFragment","Haya rgumentos");
+                newFragment.setArguments(args);
+            }
             FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
             FragmentTransaction ft = fragmentManager.beginTransaction();
             switch (customAnimation) {

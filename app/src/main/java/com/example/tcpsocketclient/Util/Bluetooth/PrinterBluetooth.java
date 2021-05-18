@@ -86,7 +86,7 @@ public class PrinterBluetooth {
             mConnectedThreadPrinter.start();*/
         } catch (IOException e) {
             Log.e("",e.getMessage());
-            /*try {
+            try {
                 Log.v("11111","trying fallback...");
 
                 btSocketPrinter =(BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,1);
@@ -97,6 +97,7 @@ public class PrinterBluetooth {
 
             }
             catch (Exception e2) {
+                Log.e("Error", "Fallback no se pudo conectar");
                 response=false;
                 try{
                     btSocketPrinter.close();
@@ -105,16 +106,16 @@ public class PrinterBluetooth {
                     return response;
                 }
 
-                Log.e("Error", "Couldn't establish Bluetooth connection!");
-            }*/
-            response=false;
+
+            }
+            /*response=false;
             try{
                 btSocketPrinter.close();
             }catch(Exception e3){
                 //Log.v("Error","No se pudo cerrar conexion");
                 Log.e("Error", "Couldn't establish Bluetooth connection!");
                 return response;
-            }
+            }*/
 
 
         }
